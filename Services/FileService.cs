@@ -2,14 +2,17 @@ using System.Text.Json;
 
 namespace Hotel;
 
-public static class FileService
+public class FileService : IRoomRepository, IUserRepository
 {
-  private static string roomsFile = "Data/rooms.json";
-  private static string usersFile = "Data/users.txt";
-  public static List<Room> LoadRooms()
+  private string roomsFile = "Data/rooms.json";
+  private string usersFile = "Data/users.txt";
+
+  //IRoomRepository
+  public List<Room> LoadRooms()
   {
     if (!File.Exists(roomsFile))
     {
+      Directory.CreateDirectory("Data");
       var defaultRooms = new List<Room>();
       for (int i = 1; i <= 10; i++)
         defaultRooms.Add(new Room(i));
@@ -18,15 +21,23 @@ public static class FileService
       return defaultRooms;
     }
     var json = File.ReadAllText(roomsFile);
-    var data = JsonSerializer.Deserialize<List<Room>>(json);
+    var options = new JsonSerializerOptions { IncludeFields = true };
+    var data = JsonSerializer.Deserialize<List<Room>>(json, options);
     return data ?? new List<Room>();
   }
-  public static void SaveRooms(List<Room> rooms)
+  public void SaveRooms(List<Room> rooms)
   {
-    var json = JsonSerializer.Serialize(rooms, new JsonSerializerOptions { WriteIndented = true });
+    Directory.CreateDirectory("Data");
+    var options = new JsonSerializerOptions
+    {
+      WriteIndented = true,
+      IncludeFields = true
+    };
+    var json = JsonSerializer.Serialize(rooms, options);
     File.WriteAllText(roomsFile, json);
   }
-  public static List<User> LoadUser()
+  //IUserRepository
+  public List<User> LoadUsers()
   {
     var users = new List<User>();
     if (!File.Exists(usersFile)) return users;
