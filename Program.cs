@@ -1,10 +1,11 @@
 ﻿using Hotel;
+using Hotel.Services;
 
 
-// Skapa tjänsterna i rätt ordning
-var fileService = new FileService();       // ✅ litet f
+
+var fileService = new FileService();
 var history = new HistoryService();
-var bookingService = new BookingService(fileService, history); // ✅ rättstavat 'fileService'
+var bookingService = new BookingService(fileService, history);
 
 // Om du har HotelManager kvar (men den används ej i mainloopen ännu)
 var hotel = new HotelManager(fileService);
