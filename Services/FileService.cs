@@ -1,18 +1,29 @@
+using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Text.Json;
+using Hotel.Models;
 
-namespace Hotel;
+namespace Hotel.Services;
 
-public class FileService : IRoomRepository, IUserRepository
+public class FileService : IRoomRepository
 {
-  private string roomsFile = "Data/rooms.json";
-  private string usersFile = "Data/users.txt";
+  private readonly string roomsFile = "Data/rooms.json";
+  private readonly string usersFile = "Data/users.txt";
 
-  //IRoomRepository
+  public FileService()
+  {
+    if (!Directory.Exists("Data"))
+      Directory.CreateDirectory("Data");
+  }
+
+  // ---------------------
+  // Rooms
+  // ---------------------
   public List<Room> LoadRooms()
   {
     if (!File.Exists(roomsFile))
     {
-      Directory.CreateDirectory("Data");
       var defaultRooms = new List<Room>();
       for (int i = 1; i <= 10; i++)
         defaultRooms.Add(new Room(i));
@@ -20,36 +31,49 @@ public class FileService : IRoomRepository, IUserRepository
       SaveRooms(defaultRooms);
       return defaultRooms;
     }
+
     var json = File.ReadAllText(roomsFile);
-    var options = new JsonSerializerOptions { IncludeFields = true };
-    var data = JsonSerializer.Deserialize<List<Room>>(json, options);
+    var data = JsonSerializer.Deserialize<List<Room>>(json);
     return data ?? new List<Room>();
   }
+
   public void SaveRooms(List<Room> rooms)
   {
-    Directory.CreateDirectory("Data");
-    var options = new JsonSerializerOptions
-    {
-      WriteIndented = true,
-      IncludeFields = true
-    };
-    var json = JsonSerializer.Serialize(rooms, options);
+    var json = JsonSerializer.Serialize(rooms, new JsonSerializerOptions { WriteIndented = true });
     File.WriteAllText(roomsFile, json);
   }
-  //IUserRepository
+
+  // ---------------------
+  // Users
+  // ---------------------
   public List<User> LoadUsers()
   {
     var users = new List<User>();
-    if (!File.Exists(usersFile)) return users;
+    if (!File.Exists(usersFile))
+      return users;
 
     foreach (var line in File.ReadAllLines(usersFile))
     {
       var parts = line.Split(',');
-      if (parts.Length == 2)
+      if (parts.Length >= 2)
       {
-        users.Add(new User(parts[0].Trim(), parts[1].Trim()));
+        var role = parts.Length == 3 && Enum.TryParse<UserRole>(parts[2].Trim(), out var parsedRole)
+            ? parsedRole
+            : UserRole.Receptionist;
+
+        users.Add(new User(parts[0].Trim(), parts[1].Trim(), role));
       }
     }
     return users;
+  }
+
+  public void SaveUsers(List<User> users)
+  {
+    var lines = new List<string>();
+    foreach (var user in users)
+    {
+      lines.Add($"{user.Username},{user.Password},{user.Role}");
+    }
+    File.WriteAllLines(usersFile, lines);
   }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hotel.Models;
 
 namespace Hotel.Services;
 
@@ -16,7 +17,6 @@ public class BookingService
     rooms = repository.LoadRooms() ?? new List<Room>();
   }
 
-  // --- Display Methods ---
   public void ShowAllRooms()
   {
     Console.WriteLine("=== All Rooms ===");
@@ -28,23 +28,18 @@ public class BookingService
   {
     Console.WriteLine("=== Available Rooms ===");
     foreach (var room in rooms)
-    {
       if (room.status == RoomStatus.Available)
         Console.WriteLine(room);
-    }
   }
 
   public void ShowUnavailableRooms()
   {
     Console.WriteLine("=== Unavailable Rooms ===");
     foreach (var room in rooms)
-    {
       if (room.status == RoomStatus.Unavailable)
         Console.WriteLine(room);
-    }
   }
 
-  // --- Booking ---
   public void BookRoom(string guest, int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);
@@ -62,11 +57,10 @@ public class BookingService
 
     room.SetGuest(guest);
     repository.SaveRooms(rooms);
-    history.Log($"Guest '{guest}' booked Room {number}.");
+    history.LogBooking(room, guest);
     Console.WriteLine($"Guest {guest} successfully booked Room {number}.");
   }
 
-  // --- Checkout ---
   public void CheckoutRoom(int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);
@@ -85,11 +79,10 @@ public class BookingService
     var guest = room.guestName ?? "Unknown";
     room.ClearGuest();
     repository.SaveRooms(rooms);
-    history.Log($"Guest '{guest}' checked out from Room {number}.");
+    history.LogCheckout(room, guest);
     Console.WriteLine($"Guest {guest} checked out from Room {number}.");
   }
 
-  // --- Unavailable ---
   public void MakeRoomUnavailable(int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);
@@ -101,7 +94,7 @@ public class BookingService
 
     room.MakeUnavailable();
     repository.SaveRooms(rooms);
-    history.Log($"Room {number} marked as temporarily unavailable.");
+    history.LogRoomUnavailable(room);
     Console.WriteLine($"Room {number} marked as unavailable.");
   }
 }

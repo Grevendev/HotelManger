@@ -2,20 +2,20 @@ namespace Hotel;
 
 public class User
 {
-  public string username;
-  public string password;
+  public string Username;
+  public string Password;
+  public UserRole Role;
 
-  public User(string name, string pass)
+  public User(string username, string password, UserRole role = UserRole.Receptionist)
   {
-    username = name;
-    password = pass;
+    Username = username;
+    Password = password;
+    Role = role;
   }
-  public string GetName()
-  {
-    return username;
-  }
-  public bool CheckLogin(string name, string pass)
-  {
-    return username == name && password == pass;
-  }
+}
+
+public enum UserRole
+{
+  Receptionist,
+  Admin
 }

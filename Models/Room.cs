@@ -1,18 +1,10 @@
-using Hotel.Models;
+namespace Hotel.Models;
 
-namespace Hotel;
-
-public enum RoomStatus
-{
-  Available,
-  Occupied,
-  Unavailable
-}
 public class Room
 {
   public int roomNumber;
-  public string? guestName;
   public RoomStatus status;
+  public string? guestName;
 
   public Room(int number)
   {
@@ -20,25 +12,36 @@ public class Room
     status = RoomStatus.Available;
     guestName = null;
   }
-  public void SetGuest(string name)
+
+  public bool IsAvailable() => status == RoomStatus.Available;
+
+  public void SetGuest(string guest)
   {
-    guestName = name;
+    guestName = guest;
     status = RoomStatus.Occupied;
   }
+
   public void ClearGuest()
   {
     guestName = null;
     status = RoomStatus.Available;
   }
+
   public void MakeUnavailable()
   {
-    status = RoomStatus.Unavailable;
     guestName = null;
+    status = RoomStatus.Unavailable;
   }
+
   public override string ToString()
   {
-    string info = $"Room {roomNumber} - {status}";
-    if (guestName != null) info += $" (Guest: {guestName})";
-    return info;
+    return $"Room {roomNumber} - {status}" + (guestName != null ? $" (Guest: {guestName})" : "");
   }
+}
+
+public enum RoomStatus
+{
+  Available,
+  Occupied,
+  Unavailable
 }

@@ -1,4 +1,9 @@
-namespace Hotel;
+using System;
+using System.IO;
+using System.Collections.Generic;
+using Hotel.Models;
+
+namespace Hotel.Services;
 
 public class HistoryService
 {
@@ -11,9 +16,7 @@ public class HistoryService
       Directory.CreateDirectory("Data");
 
     if (File.Exists(historyFile))
-    {
       history.AddRange(File.ReadAllLines(historyFile));
-    }
   }
 
   public void Log(string message)
@@ -23,6 +26,10 @@ public class HistoryService
     history.Add(entry);
     File.AppendAllText(historyFile, entry + Environment.NewLine);
   }
+
+  public void LogBooking(Room room, string guest) => Log($"Guest '{guest}' booked Room {room.roomNumber}.");
+  public void LogCheckout(Room room, string guest) => Log($"Guest '{guest}' checked out from Room {room.roomNumber}.");
+  public void LogRoomUnavailable(Room room) => Log($"Room {room.roomNumber} marked as temporarily unavailable.");
 
   public void ShowHistory()
   {
@@ -34,8 +41,6 @@ public class HistoryService
     }
 
     foreach (var item in history)
-    {
       Console.WriteLine(item);
-    }
   }
 }
