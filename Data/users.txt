@@ -1,0 +1,2 @@
+admin,password,Admin
+pop,password,Receptionist

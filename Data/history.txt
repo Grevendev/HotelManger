@@ -1,0 +1,3 @@
+[2025-10-28 21:05:56] Guest 'Edvin' booked Room 1.
+[2025-10-28 21:06:10] Guest 'Edvin' checked out from Room 1.
+[2025-10-28 21:06:18] Room 2 marked as temporarily unavailable.
