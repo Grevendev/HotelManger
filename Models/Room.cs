@@ -28,6 +28,10 @@ public class Room
   public void ClearGuest()
   {
     guestName = null;
+    status = RoomStatus.Available;
+  }
+  public void MakeUnavailable()
+  {
     status = RoomStatus.Unavailable;
   }
   public override string ToString()
