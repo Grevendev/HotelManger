@@ -1,2 +1,2 @@
 # HotelManger
-A Hotel manger consol program
+An consol-based program, that are on the building stage.
