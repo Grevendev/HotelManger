@@ -4,7 +4,7 @@ namespace Hotel;
 
 public static class FileService
 {
-  private static string rommsFile = "Data/rooms.json";
+  private static string roomsFile = "Data/rooms.json";
   private static string usersFile = "Data/users.txt";
   public static List<Room> LoadRooms()
   {
@@ -23,7 +23,7 @@ public static class FileService
   }
   public static void SaveRooms(List<Room> rooms)
   {
-    var json = JsonSerializer.Deserialize(rooms, new JsonSerializerOptions { WriteIndented = true });
+    var json = JsonSerializer.Serialize(rooms, new JsonSerializerOptions { WriteIndented = true });
     File.WriteAllText(roomsFile, json);
   }
   public static List<User> LoadUser()
@@ -36,7 +36,7 @@ public static class FileService
       var parts = line.Split(',');
       if (parts.Length == 2)
       {
-        users.Add(new User(parts[0].Trim(), parts[1].Trim()))
+        users.Add(new User(parts[0].Trim(), parts[1].Trim()));
       }
     }
     return users;
