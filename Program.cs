@@ -39,6 +39,11 @@ while (running)
     case "4":
       Console.WriteLine("Guest name: ");
       var guest = Console.ReadLine();
+      if (string.IsNullOrWhiteSpace(guest))
+      {
+        Console.WriteLine("Guest name cannot be empty!");
+        break;
+      }
       Console.Write("Room number: ");
       if (int.TryParse(Console.ReadLine(), out int roomNum1))
         bookingService.BookRoom(guest, roomNum1);

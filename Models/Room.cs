@@ -11,7 +11,7 @@ public enum RoomStatus
 public class Room
 {
   public int roomNumber;
-  public string guestName;
+  public string? guestName;
   public RoomStatus status;
 
   public Room(int number)
@@ -33,6 +33,7 @@ public class Room
   public void MakeUnavailable()
   {
     status = RoomStatus.Unavailable;
+    guestName = null;
   }
   public override string ToString()
   {
