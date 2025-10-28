@@ -97,4 +97,35 @@ public class BookingService
     history.LogRoomUnavailable(room);
     Console.WriteLine($"Room {number} marked as unavailable.");
   }
+  public void AddRoom(int number)
+  {
+    if (rooms.Exists(r => r.roomNumber == number))
+    {
+      Console.WriteLine($"Room {number} already exists!");
+      return;
+    }
+    var newRoom = new Room(number);
+    rooms.Add(newRoom);
+    repository.SaveRooms(rooms);
+    history.Log($"Room {number} added to the hotel.");
+    Console.WriteLine($"Room {number} successfully added.");
+  }
+  public void RemoveRoom(int number)
+  {
+    var room = rooms.Find(r => r.roomNumber == number);
+    if (room == null)
+    {
+      Console.WriteLine($"Room {number} does not exist!");
+      return;
+    }
+    if (room.status == RoomStatus.Occupied)
+    {
+      Console.WriteLine($"Cannot remove Room {number} because it its currently occupied.");
+      return;
+    }
+    rooms.Remove(room);
+    repository.SaveRooms(rooms);
+    history.Log($"Room {number} removed from the hotel.");
+    Console.WriteLine($"Room {number} successfully removed.");
+  }
 }
