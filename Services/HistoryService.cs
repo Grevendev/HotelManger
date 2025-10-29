@@ -1,43 +1,77 @@
-
-
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Hotel.Models;
 namespace Hotel.Services;
 
 public class HistoryService
 {
-  private readonly string historyFile = "Data/history.txt";
-  private readonly List<string> history = new();
+  private readonly string historyFile;
 
-  public HistoryService()
+  public HistoryService(string historyPath = "Data/history.txt")
   {
-    if (!Directory.Exists("Data"))
-      Directory.CreateDirectory("Data");
-
-    if (File.Exists(historyFile))
-      history.AddRange(File.ReadAllLines(historyFile));
+    historyFile = historyPath;
+    if (!File.Exists(historyFile))
+      File.WriteAllText(historyFile, "");
   }
 
-  public void Log(string message)
+  // --- Loggar händelser ---
+  public void Log(string message, string type = "INFO")
   {
-    var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-    var entry = $"[{timestamp}] {message}";
-    history.Add(entry);
+    var entry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {type.ToUpper()} | {message}";
     File.AppendAllText(historyFile, entry + Environment.NewLine);
   }
 
-  public void LogBooking(Room room, string guest) => Log($"Guest '{guest}' booked Room {room.roomNumber}.");
-  public void LogCheckout(Room room, string guest) => Log($"Guest '{guest}' checked out from Room {room.roomNumber}.");
-  public void LogRoomUnavailable(Room room) => Log($"Room {room.roomNumber} marked as temporarily unavailable.");
-
-  public void ShowHistory()
+  // --- Läser hela historiken ---
+  public List<string> LoadHistory()
   {
-    Console.WriteLine("=== Booking History ===");
-    if (history.Count == 0)
+    if (!File.Exists(historyFile)) return new List<string>();
+    return new List<string>(File.ReadAllLines(historyFile));
+  }
+
+  // --- Filtrerar historiken efter datum/nyckelord ---
+  public List<string> FilterHistory(DateTime? from = null, DateTime? to = null, string? keyword = null)
+  {
+    var history = LoadHistory();
+
+    var filtered = history
+      .Where(line =>
+      {
+        if (!DateTime.TryParse(line.Split('|')[0].Trim(), out var date))
+          return false;
+
+        bool dateMatch = (!from.HasValue || date >= from) && (!to.HasValue || date <= to);
+        bool keywordMatch = string.IsNullOrWhiteSpace(keyword) || line.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+        return dateMatch && keywordMatch;
+      })
+      .ToList();
+
+    return filtered;
+  }
+
+  // --- Visar historik i färg ---
+  public void DisplayHistory(List<string>? entries = null)
+  {
+    entries ??= LoadHistory();
+    Console.WriteLine("=== Hotel History Log ===");
+
+    foreach (var line in entries)
     {
-      Console.WriteLine("No history found.");
-      return;
+      if (line.Contains("BOOKED", StringComparison.OrdinalIgnoreCase))
+        Console.ForegroundColor = ConsoleColor.Green;
+      else if (line.Contains("CHECKOUT", StringComparison.OrdinalIgnoreCase))
+        Console.ForegroundColor = ConsoleColor.Yellow;
+      else if (line.Contains("UNAVAILABLE", StringComparison.OrdinalIgnoreCase))
+        Console.ForegroundColor = ConsoleColor.Gray;
+      else if (line.Contains("ERROR", StringComparison.OrdinalIgnoreCase))
+        Console.ForegroundColor = ConsoleColor.Red;
+      else
+        Console.ForegroundColor = ConsoleColor.White;
+
+      Console.WriteLine(line);
     }
 
-    foreach (var item in history)
-      Console.WriteLine(item);
+    Console.ResetColor();
   }
 }

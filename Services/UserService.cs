@@ -1,3 +1,4 @@
+using Hotel.Models;
 namespace Hotel.Services;
 
 public class UserService

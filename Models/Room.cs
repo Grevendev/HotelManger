@@ -1,19 +1,24 @@
-namespace Hotel;
+namespace Hotel.Models;
+
+public enum RoomStatus
+{
+  Available,
+  Occupied,
+  Unavailable
+}
 
 public class Room
 {
   public int roomNumber;
-  public RoomStatus status;
   public string? guestName;
+  public RoomStatus status;
 
   public Room(int number)
   {
     roomNumber = number;
-    status = RoomStatus.Available;
     guestName = null;
+    status = RoomStatus.Available;
   }
-
-  public bool IsAvailable() => status == RoomStatus.Available;
 
   public void SetGuest(string guest)
   {
@@ -35,13 +40,6 @@ public class Room
 
   public override string ToString()
   {
-    return $"Room {roomNumber} - {status}" + (guestName != null ? $" (Guest: {guestName})" : "");
+    return $"Room {roomNumber}: {status}" + (guestName != null ? $" ({guestName})" : "");
   }
-}
-
-public enum RoomStatus
-{
-  Available,
-  Occupied,
-  Unavailable
 }
