@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Hotel.Models;
 namespace Hotel.Services;
 
 public class HistoryService
