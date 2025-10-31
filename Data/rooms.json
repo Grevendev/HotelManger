@@ -1,12 +1,16 @@
 [
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {}
+  {
+    "roomNumber": 1,
+    "guestName": "Kalle",
+    "status": 1,
+    "type": 0,
+    "capacity": 2
+  },
+  {
+    "roomNumber": 2,
+    "guestName": null,
+    "status": 0,
+    "type": 0,
+    "capacity": 1
+  }
 ]

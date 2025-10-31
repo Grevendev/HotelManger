@@ -1,4 +1,13 @@
+using System.Text.Json.Serialization;
+
 namespace Hotel.Models;
+
+public enum RoomType
+{
+  SingleBed,
+  DoubleBed,
+  Suite
+}
 
 public enum RoomStatus
 {
@@ -9,15 +18,27 @@ public enum RoomStatus
 
 public class Room
 {
+  [JsonInclude]
   public int roomNumber;
+  [JsonInclude]
   public string? guestName;
+  [JsonInclude]
   public RoomStatus status;
+  [JsonInclude]
+  public RoomType type;
+  [JsonInclude]
+  public int capacity;
 
-  public Room(int number)
+  public Room() { }
+
+  public Room(int number, RoomType type = RoomType.SingleBed, int capacity = 1)
   {
+    if (number <= 0) throw new ArgumentException("Room number must be greater than 0");
     roomNumber = number;
     guestName = null;
     status = RoomStatus.Available;
+    this.type = type;
+    this.capacity = capacity;
   }
 
   public void SetGuest(string guest)
@@ -40,6 +61,6 @@ public class Room
 
   public override string ToString()
   {
-    return $"Room {roomNumber}: {status}" + (guestName != null ? $" ({guestName})" : "");
+    return $"Room {roomNumber}: {status}, {type}, Capacity: {capacity}" + (guestName != null ? $" ({guestName})" : "");
   }
 }

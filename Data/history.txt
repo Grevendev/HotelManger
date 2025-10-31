@@ -2,3 +2,15 @@
 [2025-10-28 21:06:10] Guest 'Edvin' checked out from Room 1.
 [2025-10-28 21:06:18] Room 2 marked as temporarily unavailable.
 [2025-10-29 11:47:51] Guest 'Kalle' booked Room 2.
+2025-10-31 11:03:44 | LOGIN | admin logged in.
+2025-10-31 11:04:18 | INFO | SYSTEM | Room 11 added: Suite, capacity 2 added to the hotel.
+2025-10-31 11:05:23 | LOGIN | admin logged in.
+2025-10-31 11:05:25 | LOGOUT | admin logged out.
+2025-10-31 11:05:55 | LOGIN | admin logged in.
+2025-10-31 11:07:09 | LOGOUT | admin logged out.
+2025-10-31 11:14:05 | LOGIN | admin logged in.
+2025-10-31 11:14:27 | INFO | SYSTEM | Room 1 added: SingleBed, capacity 2 added to the hotel.
+2025-10-31 11:18:28 | LOGIN | admin logged in.
+2025-10-31 11:18:37 | INFO | SYSTEM | Room 0 removed from the hotel.
+2025-10-31 11:18:55 | INFO | SYSTEM | Room 2 added: SingleBed, capacity 1 added to the hotel.
+2025-10-31 11:19:06 | INFO | BOOKED | Guest 'Kalle' booked Room 1

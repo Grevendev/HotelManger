@@ -59,6 +59,10 @@ public class BookingService
         Console.WriteLine($"Room {room.roomNumber}: Unavailable");
         break;
     }
+    Console.WriteLine($"Room {room.roomNumber}: {room.status}, {room.type}, Capacity: {room.capacity}" +
+    (room.guestName != null ? $" ({room.guestName})" : ""));
+
+    Console.ResetColor();
   }
 
   // --- Bokning ---
@@ -122,8 +126,8 @@ public class BookingService
     Console.WriteLine($"Room {number} marked as unavailable.");
   }
 
-  // --- Lägg till rum ---
-  public void AddRoom(int number)
+  // --- Add room ---
+  public void AddRoom(int number, RoomType type, int capacity)
   {
     if (rooms.Exists(r => r.roomNumber == number))
     {
@@ -131,14 +135,14 @@ public class BookingService
       return;
     }
 
-    var newRoom = new Room(number);
+    var newRoom = new Room(number, type, capacity);
     rooms.Add(newRoom);
     repository.SaveRooms(rooms);
-    history.Log($"SYSTEM | Room {number} added to the hotel.");
+    history.Log($"SYSTEM | Room {number} added: {type}, capacity {capacity} added to the hotel.");
     Console.WriteLine($"Room {number} successfully added.");
   }
 
-  // --- Ta bort rum ---
+  // --- Remove room ---
   public void RemoveRoom(int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);

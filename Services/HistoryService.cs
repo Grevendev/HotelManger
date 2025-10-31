@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Hotel.Models;
+
 namespace Hotel.Services;
 
 public class HistoryService
@@ -11,11 +17,22 @@ public class HistoryService
       File.WriteAllText(historyFile, "");
   }
 
-  // --- Loggar händelser ---
+  // --- Grundläggande loggfunktion ---
   public void Log(string message, string type = "INFO")
   {
     var entry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {type.ToUpper()} | {message}";
     File.AppendAllText(historyFile, entry + Environment.NewLine);
+  }
+
+  // --- Loggar användarhändelser ---
+  public void LogLogin(User user)
+  {
+    Log($"User '{user.Username}' logged in ({user.Role})", "LOGIN");
+  }
+
+  public void LogLogout(User user)
+  {
+    Log($"User '{user.Username}' logged out", "LOGOUT");
   }
 
   // --- Läser hela historiken ---
@@ -31,16 +48,16 @@ public class HistoryService
     var history = LoadHistory();
 
     var filtered = history
-      .Where(line =>
-      {
-        if (!DateTime.TryParse(line.Split('|')[0].Trim(), out var date))
-          return false;
+        .Where(line =>
+        {
+          if (!DateTime.TryParse(line.Split('|')[0].Trim(), out var date))
+            return false;
 
-        bool dateMatch = (!from.HasValue || date >= from) && (!to.HasValue || date <= to);
-        bool keywordMatch = string.IsNullOrWhiteSpace(keyword) || line.Contains(keyword, StringComparison.OrdinalIgnoreCase);
-        return dateMatch && keywordMatch;
-      })
-      .ToList();
+          bool dateMatch = (!from.HasValue || date >= from) && (!to.HasValue || date <= to);
+          bool keywordMatch = string.IsNullOrWhiteSpace(keyword) || line.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+          return dateMatch && keywordMatch;
+        })
+        .ToList();
 
     return filtered;
   }
@@ -59,6 +76,10 @@ public class HistoryService
         Console.ForegroundColor = ConsoleColor.Yellow;
       else if (line.Contains("UNAVAILABLE", StringComparison.OrdinalIgnoreCase))
         Console.ForegroundColor = ConsoleColor.Gray;
+      else if (line.Contains("LOGIN", StringComparison.OrdinalIgnoreCase))
+        Console.ForegroundColor = ConsoleColor.Cyan;
+      else if (line.Contains("LOGOUT", StringComparison.OrdinalIgnoreCase))
+        Console.ForegroundColor = ConsoleColor.Blue;
       else if (line.Contains("ERROR", StringComparison.OrdinalIgnoreCase))
         Console.ForegroundColor = ConsoleColor.Red;
       else
