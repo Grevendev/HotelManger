@@ -48,26 +48,24 @@ public class BookingService
   // --- DISPLAY ROOM STATUS ---
   private void DisplayRoomStatus(Room room)
   {
-    switch (room.status)
+    ConsoleColor color = room.status switch
     {
-      case RoomStatus.Available:
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Room {room.roomNumber}: Available");
-        break;
-      case RoomStatus.Occupied:
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"Room {room.roomNumber}: Occupied by {room.guestName}");
-        break;
-      case RoomStatus.Unavailable:
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine($"Room {room.roomNumber}: Unavailable");
-        break;
-    }
-    Console.WriteLine($"Room {room.roomNumber}: {room.status}, {room.type}, Capacity: {room.capacity}" +
-    (room.guestName != null ? $" ({room.guestName})" : ""));
+      RoomStatus.Available => ConsoleColor.Green,
+      RoomStatus.Occupied => ConsoleColor.Red,
+      RoomStatus.Unavailable => ConsoleColor.Yellow,
+      _ => ConsoleColor.White
+    };
+
+    Console.ForegroundColor = color;
+
+    string guestInfo = room.guestName != null ? $" (Guest: {room.guestName})" : "";
+    string priceInfo = $" | Price: {room.pricePerNight:C} | Capacity: {room.capacity}";
+
+    Console.WriteLine($"Room {room.roomNumber}: {room.status}, {room.type}{guestInfo}{priceInfo}");
 
     Console.ResetColor();
   }
+
 
   // --- BOOK ROOM ---
   public void BookRoom(string guest, int number)
@@ -110,7 +108,7 @@ public class BookingService
 
     var guest = room.guestName ?? "Unknown";
 
-    // Calculate total amount of nights
+    // CALCULATE TOTAL AMOUNT OF NIGHTS
     var checkIn = room.checkInDate ?? DateTime.Now;
     var nights = (DateTime.Now - checkIn).Days;
     if (nights < 1) nights = 1;
@@ -124,7 +122,7 @@ public class BookingService
     Console.WriteLine($"Guest {guest} checked out from Room {number}. Total cost: {totalCost:C}");
   }
 
-  // --- Markera otillgänglig ---
+  // --- MAKE UNAVAILABLE ---
   public void MakeRoomUnavailable(int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);
@@ -140,7 +138,7 @@ public class BookingService
     Console.WriteLine($"Room {number} marked as unavailable.");
   }
 
-  // --- Add room ---
+  // --- ADD ROOM---
   public void AddRoom(int number, RoomType type, int capacity)
   {
     if (rooms.Exists(r => r.roomNumber == number))
@@ -156,7 +154,7 @@ public class BookingService
     Console.WriteLine($"Room {number} successfully added.");
   }
 
-  // --- Remove room ---
+  // --- REMOVE ROOM ---
   public void RemoveRoom(int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);
@@ -177,7 +175,7 @@ public class BookingService
     history.Log($"SYSTEM | Room {number} removed from the hotel.");
     Console.WriteLine($"Room {number} successfully removed.");
   }
-  //Update room price
+  //UPDATE ROOM PRICE
   public void UpdateRoomPrice(int roomNumber, decimal newPrice)
   {
     var room = rooms.Find(r => r.roomNumber == roomNumber);
@@ -195,5 +193,37 @@ public class BookingService
     repository.SaveRooms(rooms);
     history.Log($"SYSTEM | Room {roomNumber} price updated to {newPrice:C}");
     Console.WriteLine($"Room {roomNumber} price updated to {newPrice:C}");
+  }
+  // --- UPDATE ROOM INFO (PRICE, CAPACITY, TYPE) ---
+  public void UpdateRoom(int number)
+  {
+    var room = rooms.Find(r => r.roomNumber == number);
+    if (room == null)
+    {
+      Console.WriteLine($"Room {number} not found!");
+      return;
+    }
+    Console.WriteLine($"\nUpdating Room {number}");
+    Console.WriteLine($"Current Type: (SingleBed / DoubleBed / Suite, or leave empty to keep current): ");
+    string? typeInput = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(typeInput) && Enum.TryParse(typeInput, out RoomType newType))
+    {
+      room.type = newType;
+    }
+    Console.Write("Enter new capacity (or leave empty to keep current): ");
+    string? capInput = Console.ReadLine();
+    if (int.TryParse(capInput, out int newCap))
+    {
+      room.capacity = newCap;
+    }
+    Console.Write("Enter new price (or leave empty to keep current): ");
+    string? priceInput = Console.ReadLine();
+    if (decimal.TryParse(priceInput, out decimal newPrice))
+    {
+      room.pricePerNight = newPrice;
+    }
+    repository.SaveRooms(rooms);
+    history.Log($"SYSTEM | Room {number} updated: Type={room.type}, Capacity={room.capacity}, Price={room.pricePerNight:C}");
+    Console.WriteLine($"Room {number} updated successfully!");
   }
 }
