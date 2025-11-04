@@ -53,11 +53,12 @@ while (!exitProgram)
       Console.WriteLine("8. Add new user");
       Console.WriteLine("9. Add new room");
       Console.WriteLine("10. Remove room");
+      Console.WriteLine("11. Change room price");
     }
 
-    Console.WriteLine("11. Show full history");
-    Console.WriteLine("12. Filter history");
-    Console.WriteLine("13. Exit program");
+    Console.WriteLine("12. Show full history");
+    Console.WriteLine("13. Filter history");
+    Console.WriteLine("14. Exit program");
     Console.WriteLine();
     Console.Write("Select an option: ");
 
@@ -157,12 +158,28 @@ while (!exitProgram)
           Console.WriteLine("Invalid room number.");
         break;
 
-      case "11":
+      case "11" when activeUser.Role == UserRole.Admin:
+        Console.Write("Enter room number to update: ");
+        if (!int.TryParse(Console.ReadLine(), out int priceRoomNum))
+        {
+          Console.WriteLine("Invalid room number.");
+          break;
+        }
+        Console.Write("Enter new price per night: ");
+        if (!decimal.TryParse(Console.ReadLine(), out decimal newPrice))
+        {
+          Console.WriteLine("Invalid price.");
+          break;
+        }
+        bookingService.UpdateRoomPrice(priceRoomNum, newPrice);
+        break;
+
+      case "12":
         Console.WriteLine("Hotel History:");
         historyService.DisplayHistory();
         break;
 
-      case "12":
+      case "13":
         Console.Write("Keyword (optional): ");
         var keyword = Console.ReadLine();
         Console.Write("From date (yyyy-MM-dd) or blank: ");
@@ -177,7 +194,7 @@ while (!exitProgram)
         historyService.DisplayHistory(filtered);
         break;
 
-      case "13":
+      case "14":
         Console.WriteLine("Exiting program...");
         Thread.Sleep(1000);
         loggedIn = false;

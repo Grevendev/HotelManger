@@ -14,3 +14,5 @@
 2025-10-31 11:18:37 | INFO | SYSTEM | Room 0 removed from the hotel.
 2025-10-31 11:18:55 | INFO | SYSTEM | Room 2 added: SingleBed, capacity 1 added to the hotel.
 2025-10-31 11:19:06 | INFO | BOOKED | Guest 'Kalle' booked Room 1
+2025-11-03 09:43:15 | LOGIN | pop logged in.
+2025-11-03 09:44:17 | LOGOUT | pop logged out.

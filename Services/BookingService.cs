@@ -15,7 +15,7 @@ public class BookingService
     rooms = repository.LoadRooms() ?? new List<Room>();
   }
 
-  // --- Visa rum ---
+  // --- SHOW ALL ROOMS ---
   public void ShowAllRooms()
   {
     Console.WriteLine("\n=== All Rooms ===");
@@ -24,6 +24,8 @@ public class BookingService
     Console.ResetColor();
   }
 
+
+  // --- SHOW AVAILABLE ROOMS ---
   public void ShowAvailableRooms()
   {
     Console.WriteLine("=== Available Rooms ===");
@@ -33,6 +35,7 @@ public class BookingService
     Console.ResetColor();
   }
 
+  // --- SHOW UNAVAILABLE ROOMS ---
   public void ShowUnavailableRooms()
   {
     Console.WriteLine("=== Unavailable Rooms ===");
@@ -42,6 +45,7 @@ public class BookingService
     Console.ResetColor();
   }
 
+  // --- DISPLAY ROOM STATUS ---
   private void DisplayRoomStatus(Room room)
   {
     switch (room.status)
@@ -65,7 +69,7 @@ public class BookingService
     Console.ResetColor();
   }
 
-  // --- Bokning ---
+  // --- BOOK ROOM ---
   public void BookRoom(string guest, int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);
@@ -82,12 +86,13 @@ public class BookingService
     }
 
     room.SetGuest(guest);
+    room.checkInDate = DateTime.Now;
     repository.SaveRooms(rooms);
     history.Log($"BOOKED | Guest '{guest}' booked Room {number}");
     Console.WriteLine($"Guest {guest} successfully booked Room {number}.");
   }
 
-  // --- Utcheckning ---
+  // --- CHECKOUT ROOM ---
   public void CheckoutRoom(int number)
   {
     var room = rooms.Find(r => r.roomNumber == number);
@@ -104,10 +109,19 @@ public class BookingService
     }
 
     var guest = room.guestName ?? "Unknown";
+
+    // Calculate total amount of nights
+    var checkIn = room.checkInDate ?? DateTime.Now;
+    var nights = (DateTime.Now - checkIn).Days;
+    if (nights < 1) nights = 1;
+
+    var totalCost = nights * room.pricePerNight;
+
     room.ClearGuest();
     repository.SaveRooms(rooms);
-    history.Log($"CHECKOUT | Guest '{guest}' checked out from Room {number}");
-    Console.WriteLine($"Guest {guest} checked out from Room {number}.");
+
+    history.Log($"CHECKOUT | Guest '{guest}' checked out from Room {number} after {nights} night(s). Total: {totalCost:C}");
+    Console.WriteLine($"Guest {guest} checked out from Room {number}. Total cost: {totalCost:C}");
   }
 
   // --- Markera otillgänglig ---
@@ -162,5 +176,24 @@ public class BookingService
     repository.SaveRooms(rooms);
     history.Log($"SYSTEM | Room {number} removed from the hotel.");
     Console.WriteLine($"Room {number} successfully removed.");
+  }
+  //Update room price
+  public void UpdateRoomPrice(int roomNumber, decimal newPrice)
+  {
+    var room = rooms.Find(r => r.roomNumber == roomNumber);
+    if (room == null)
+    {
+      Console.WriteLine($"Room {roomNumber} not found!");
+      return;
+    }
+    if (newPrice <= 0)
+    {
+      Console.WriteLine("Invalid price. Must be greater than zero.");
+      return;
+    }
+    room.pricePerNight = newPrice;
+    repository.SaveRooms(rooms);
+    history.Log($"SYSTEM | Room {roomNumber} price updated to {newPrice:C}");
+    Console.WriteLine($"Room {roomNumber} price updated to {newPrice:C}");
   }
 }
