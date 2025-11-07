@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Hotel.Models;
 
 namespace Hotel.Services;
@@ -17,14 +13,14 @@ public class HistoryService
       File.WriteAllText(historyFile, "");
   }
 
-  // --- Grundläggande loggfunktion ---
+  // --- BASIC LOG-FUNCTIONS ---
   public void Log(string message, string type = "INFO")
   {
     var entry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {type.ToUpper()} | {message}";
     File.AppendAllText(historyFile, entry + Environment.NewLine);
   }
 
-  // --- Loggar användarhändelser ---
+  // --- LOGS USER EVENTS ---
   public void LogLogin(User user)
   {
     Log($"User '{user.Username}' logged in ({user.Role})", "LOGIN");
@@ -35,14 +31,14 @@ public class HistoryService
     Log($"User '{user.Username}' logged out", "LOGOUT");
   }
 
-  // --- Läser hela historiken ---
+  // --- READ WHOLE HISTORY ---
   public List<string> LoadHistory()
   {
     if (!File.Exists(historyFile)) return new List<string>();
     return new List<string>(File.ReadAllLines(historyFile));
   }
 
-  // --- Filtrerar historiken efter datum/nyckelord ---
+  // --- FILTER HISTORY AFTER DATE/KEYWORD ---
   public List<string> FilterHistory(DateTime? from = null, DateTime? to = null, string? keyword = null)
   {
     var history = LoadHistory();
@@ -62,7 +58,7 @@ public class HistoryService
     return filtered;
   }
 
-  // --- Visar historik i färg ---
+  // --- SHOW HISTORY IN COLOUR ---
   public void DisplayHistory(List<string>? entries = null)
   {
     entries ??= LoadHistory();

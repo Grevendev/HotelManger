@@ -12,7 +12,7 @@ while (!exitProgram)
 {
   User? activeUser = null;
 
-  // --- Inloggningsloop ---
+  // --- LOGIN-LOOP ---
   while (activeUser == null)
   {
     Console.Clear();
@@ -34,6 +34,7 @@ while (!exitProgram)
 
   bool loggedIn = true;
 
+  // --- LOGGED IN MENU ---
   while (loggedIn)
   {
     Console.Clear();
@@ -132,23 +133,45 @@ while (!exitProgram)
         break;
 
       case "9" when activeUser.Role == UserRole.Admin:
-        Console.Write("Room number to add: ");
-        if (int.TryParse(Console.ReadLine(), out int newRoomNum))
-        {
-          Console.Write("Room type (SingleBed/DoubleBed/Suite): ");
-          string? inputType = Console.ReadLine();
-          RoomType type = Enum.TryParse(inputType, true, out RoomType parsedType) ? parsedType : RoomType.SingleBed;
+  Console.Write("Room number to add: ");
+  string? roomInput = Console.ReadLine();
 
-          Console.Write("Capacity: ");
-          int capacity = int.TryParse(Console.ReadLine(), out int cap) ? cap : 1;
+  if (!int.TryParse(roomInput, out int newRoomNum) || newRoomNum <= 0)
+  {
+    Console.WriteLine("Invalid room number. Must be a positive number.");
+    break;
+  }
 
-          bookingService.AddRoom(newRoomNum, type, capacity);
-        }
-        else
-        {
-          Console.WriteLine("Invalid room number.");
-        }
-        break;
+  Console.Write("Room type (SingleBed/DoubleBed/Suite): ");
+  string? inputType = Console.ReadLine();
+  if (!Enum.TryParse(inputType, true, out RoomType type))
+  {
+    Console.WriteLine("Invalid room type. Defaulting to SingleBed.");
+    type = RoomType.SingleBed;
+  }
+
+  Console.Write("Capacity: ");
+  if (!int.TryParse(Console.ReadLine(), out int capacity) || capacity <= 0)
+  {
+    Console.WriteLine("Invalid capacity. Must be a positive number.");
+    break;
+  }
+
+  Console.Write("Price per night (default 500 if left empty): ");
+  string? priceInput = Console.ReadLine();
+  decimal price = 500;
+  if (!string.IsNullOrWhiteSpace(priceInput))
+  {
+    if (!decimal.TryParse(priceInput, out price) || price <= 0)
+    {
+      Console.WriteLine("Invalid price. Must be a positive number.");
+      break;
+    }
+  }
+
+  bookingService.AddRoom(newRoomNum, type, capacity, price);
+  break;
+
 
 
       case "10" when activeUser.Role == UserRole.Admin:

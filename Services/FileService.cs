@@ -23,7 +23,7 @@ namespace Hotel.Services
       if (!Directory.Exists(dataDir))
         Directory.CreateDirectory(dataDir);
 
-      // Default rooms
+      // --- Default rooms ---
       if (!File.Exists(roomsFile) || new FileInfo(roomsFile).Length == 0)
       {
         var defaultRooms = new List<Room>();
@@ -32,7 +32,7 @@ namespace Hotel.Services
         SaveRooms(defaultRooms);
       }
 
-      // Default users
+      // --- Default users ---
       if (!File.Exists(usersFile) || new FileInfo(usersFile).Length == 0)
       {
         var defaultUsers = new List<string>

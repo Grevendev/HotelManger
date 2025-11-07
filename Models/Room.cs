@@ -37,7 +37,15 @@ public class Room
 
   public Room(int number, RoomType type = RoomType.SingleBed, int capacity = 1, decimal pricePerNight = 500)
   {
-    if (number <= 0) throw new ArgumentException("Room number must be greater than 0");
+    if (number <= 0) 
+    throw new ArgumentException("Room number must be greater than 0");
+
+    if (capacity <= 0)
+    throw new ArgumentException("Capacity must be greater than 0");
+
+    if (pricePerNight <= 0)
+    throw new ArgumentException("Price per night must be greater than 0");
+
     roomNumber = number;
     guestName = null;
     status = RoomStatus.Available;
@@ -65,8 +73,11 @@ public class Room
     status = RoomStatus.Unavailable;
   }
 
+  
   public override string ToString()
-  {
-    return $"Room {roomNumber}: {status}, {type}, Capacity: {capacity}, Price: {pricePerNight:C}" + (guestName != null ? $" ({guestName})" : "");
-  }
+{
+  string guestInfo = guestName != null ? $" (Guest: {guestName})" : "";
+  return $"Room {roomNumber}: {status}, {type}, Capacity: {capacity}, Price: {pricePerNight:C}{guestInfo}";
+}
+
 }
