@@ -44,8 +44,45 @@ public class BookingService
         DisplayRoomStatus(room);
     Console.ResetColor();
   }
+  // --- FILTER ROOMS BY TYPE ---
+  public void FilterRoomsByType()
+  {
+    Console.Write("Enter room type to filter (SingleBed / DoubleBed / Suite): ");
+    string? input = Console.ReadLine();
+    if (!Enum.TryParse(input, true, out RoomType type))
+    {
+      Console.WriteLine("Invalid type!");
+      return;
+    }
+
+    var filtered = rooms.Where(r => r.type == type).ToList();
+    Console.WriteLine($"\n=== Rooms of type: {type} ===");
+    foreach (var room in filtered)
+      DisplayRoomStatus(room);
+  }
+
+  // --- SORT ROOMS BY PRICE ---
+  public void SortRoomsByPrice()
+  {
+    var sorted = rooms.OrderBy(r => r.pricePerNight).ToList();
+    Console.WriteLine("\n=== Rooms sorted by price (ascending) ===");
+    foreach (var room in sorted)
+      DisplayRoomStatus(room);
+  }
+
+  // --- SORT ROOMS BY CAPACITY ---
+  public void SortRoomsByCapacity()
+  {
+    var sorted = rooms.OrderByDescending(r => r.capacity).ToList();
+    Console.WriteLine("\n=== Rooms sorted by capacity (descending) ===");
+    foreach (var room in sorted)
+      DisplayRoomStatus(room);
+  }
+
 
   // --- DISPLAY ROOM STATUS ---
+  // --- DISPLAY ROOM STATUS (DETAILED) ---
+  // --- DISPLAY ROOM STATUS (DETAILED) ---
   private void DisplayRoomStatus(Room room)
   {
     ConsoleColor color = room.status switch
@@ -57,15 +94,51 @@ public class BookingService
     };
 
     Console.ForegroundColor = color;
+    Console.WriteLine($"Room {room.roomNumber} ({room.type}) - {room.status}");
+    Console.ResetColor();
 
-    string guestInfo = room.guestName != null ? $" (Guest: {room.guestName})" : "";
-    string priceInfo = $" | Price: {room.pricePerNight:C} | Capacity: {room.capacity}";
+    Console.WriteLine($"  Capacity: {room.capacity}");
+    Console.WriteLine($"  Price per night: {room.pricePerNight:C}");
+    Console.WriteLine($"  Bed Type: {room.bedType} x{room.bedCount}");
+    Console.WriteLine($"  Description: {room.description}");
 
-    Console.WriteLine($"Room {room.roomNumber}: {room.status}, {room.type}{guestInfo}{priceInfo}");
+    if (room.amenities != null && room.amenities.Count > 0)
+      Console.WriteLine($"  Amenities: {string.Join(", ", room.amenities)}");
 
+    if (!string.IsNullOrWhiteSpace(room.guestName))
+      Console.WriteLine($"  Current guest: {room.guestName}");
+
+    if (room.checkInDate.HasValue)
+      Console.WriteLine($"  Checked in: {room.checkInDate.Value:g}");
+
+    Console.WriteLine("------------------------------------");
+  }
+
+  // --- FILTER ROOMS ---
+  public void FilterRooms(RoomType? type = null, RoomStatus? status = null, decimal? minPrice = null, decimal? maxPrice = null, int? minCapacity = null)
+  {
+    Console.WriteLine("\n=== Filtered Rooms ===");
+    var filtered = rooms.Where(r =>
+    (!type.HasValue || r.type == type) &&
+    (!status.HasValue || r.status == status) &&
+    (!minPrice.HasValue || r.pricePerNight >= minPrice) &&
+    (!maxPrice.HasValue || r.pricePerNight <= maxPrice) &&
+    (!minCapacity.HasValue || r.capacity >= minCapacity)
+    ).ToList();
+
+    if (filtered.Count == 0)
+    {
+      Console.WriteLine("No rooms match your criteria.");
+      return;
+    }
+    foreach (var room in filtered)
+      DisplayRoomStatus(room);
     Console.ResetColor();
   }
 
+
+  // --- BOOK ROOM ---
+  // --- BOOK ROOM WITH DATES ---
 
   // --- BOOK ROOM ---
   public void BookRoom(string guest, int number)
@@ -83,12 +156,44 @@ public class BookingService
       return;
     }
 
+    // --- Input check-in date ---
+    Console.Write("Enter check-in date (yyyy-MM-dd): ");
+    if (!DateTime.TryParse(Console.ReadLine(), out DateTime checkIn))
+    {
+      Console.WriteLine("Invalid check-in date format!");
+      return;
+    }
+
+    // --- Input check-out date ---
+    Console.Write("Enter check-out date (yyyy-MM-dd): ");
+    if (!DateTime.TryParse(Console.ReadLine(), out DateTime checkOut))
+    {
+      Console.WriteLine("Invalid check-out date format!");
+      return;
+    }
+
+    if (checkOut <= checkIn)
+    {
+      Console.WriteLine("Check-out date must be after check-in date!");
+      return;
+    }
+
+    int nights = (checkOut - checkIn).Days;
+    decimal total = nights * room.pricePerNight;
+
+    // --- Assign guest and check-in date ---
     room.SetGuest(guest);
-    room.checkInDate = DateTime.Now;
+    room.checkInDate = checkIn;
+
+    // --- Save and log ---
     repository.SaveRooms(rooms);
-    history.Log($"BOOKED | Guest '{guest}' booked Room {number}");
-    Console.WriteLine($"Guest {guest} successfully booked Room {number}.");
+    history.Log($"BOOKED | Guest '{guest}' booked Room {number} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd} | Nights: {nights}, Total: {total:C}");
+
+    Console.WriteLine($"Booking successful! {guest} will stay {nights} night(s). Total cost: {total:C}");
   }
+
+
+
 
   // --- CHECKOUT ROOM ---
   public void CheckoutRoom(int number)
@@ -139,7 +244,15 @@ public class BookingService
   }
 
   // --- ADD ROOM ---
-  public void AddRoom(int number, RoomType type, int capacity, decimal pricePerNight = 500)
+  public void AddRoom(
+    int number,
+    RoomType type,
+    int capacity,
+    decimal pricePerNight = 500,
+    string description = "Standard room",
+    string bedType = "Single",
+    int bedCount = 1
+  )
   {
     if (number <= 0)
     {
@@ -148,7 +261,7 @@ public class BookingService
     }
     if (capacity <= 0)
     {
-      Console.WriteLine("Capactity must be greater than 0.");
+      Console.WriteLine("Capacity must be greater than 0.");
       return;
     }
     if (pricePerNight <= 0)
@@ -162,13 +275,17 @@ public class BookingService
       return;
     }
 
-    var newRoom = new Room(number, type, capacity, pricePerNight);
+    var newRoom = new Room(number, type, capacity, pricePerNight, description, bedType, bedCount);
     rooms.Add(newRoom);
     repository.SaveRooms(rooms);
-    history.Log($"SYSTEM | Room {number} added: {type}, capacity {capacity}, price {pricePerNight:C} added to the hotel.");
-
+    history.Log(
+      $"SYSTEM | Room {number} added: {type}, capacity {capacity}, " +
+      $"beds {bedCount}x{bedType}, price {pricePerNight:C}, desc '{description}'."
+    );
     Console.WriteLine($"Room {number} successfully added.");
   }
+
+
 
   // --- REMOVE ROOM ---
   public void RemoveRoom(int number)
@@ -211,44 +328,55 @@ public class BookingService
     Console.WriteLine($"Room {roomNumber} price updated to {newPrice:C}");
   }
   // --- UPDATE ROOM INFO (PRICE, CAPACITY, TYPE) ---
+  // --- UPDATE ROOM INFO (TYPE, CAPACITY, PRICE, BED INFO, DESCRIPTION, AMENITIES) ---
   public void UpdateRoom(int number)
-{
+  {
     var room = rooms.Find(r => r.roomNumber == number);
     if (room == null)
     {
-        Console.WriteLine($"Room {number} not found!");
-        return;
+      Console.WriteLine($"Room {number} not found!");
+      return;
     }
 
     Console.WriteLine($"\nUpdating Room {number}");
-    Console.WriteLine($"Current Type: {room.type} (SingleBed / DoubleBed / Suite, leave empty to keep current): ");
+    Console.Write($"Current Type: {room.type} (SingleBed / DoubleBed / Suite, or leave empty): ");
     string? typeInput = Console.ReadLine();
-    if (!string.IsNullOrWhiteSpace(typeInput) && Enum.TryParse(typeInput, true, out RoomType newType))
-        room.type = newType;
+    if (!string.IsNullOrWhiteSpace(typeInput) && Enum.TryParse(typeInput, out RoomType newType))
+      room.type = newType;
 
-    Console.Write($"Current Capacity: {room.capacity}. Enter new capacity (leave empty to keep current): ");
+    Console.Write($"Current Capacity: {room.capacity} | New (or leave empty): ");
     string? capInput = Console.ReadLine();
-    if (!string.IsNullOrWhiteSpace(capInput))
-    {
-        if (int.TryParse(capInput, out int newCap) && newCap > 0)
-            room.capacity = newCap;
-        else
-            Console.WriteLine("Invalid capacity. Must be a positive number. Keeping current value.");
-    }
+    if (int.TryParse(capInput, out int newCap) && newCap > 0)
+      room.capacity = newCap;
 
-    Console.Write($"Current Price: {room.pricePerNight:C}. Enter new price (leave empty to keep current): ");
+    Console.Write($"Current Price: {room.pricePerNight:C} | New (or leave empty): ");
     string? priceInput = Console.ReadLine();
-    if (!string.IsNullOrWhiteSpace(priceInput))
-    {
-        if (decimal.TryParse(priceInput, out decimal newPrice) && newPrice > 0)
-            room.pricePerNight = newPrice;
-        else
-            Console.WriteLine("Invalid price. Must be a positive number. Keeping current value.");
-    }
+    if (decimal.TryParse(priceInput, out decimal newPrice) && newPrice > 0)
+      room.pricePerNight = newPrice;
+
+    Console.Write($"Current Bed Type: {room.bedType} | New (or leave empty): ");
+    string? bedTypeInput = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(bedTypeInput))
+      room.bedType = bedTypeInput;
+
+    Console.Write($"Current Bed Count: {room.bedCount} | New (or leave empty): ");
+    string? bedCountInput = Console.ReadLine();
+    if (int.TryParse(bedCountInput, out int newBedCount) && newBedCount > 0)
+      room.bedCount = newBedCount;
+
+    Console.Write($"Current Description: {room.description} | New (or leave empty): ");
+    string? descInput = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(descInput))
+      room.description = descInput;
+
+    Console.WriteLine("Update amenities (comma-separated, leave empty to skip): ");
+    string? amenitiesInput = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(amenitiesInput))
+      room.amenities = amenitiesInput.Split(',').Select(a => a.Trim()).ToList();
 
     repository.SaveRooms(rooms);
-    history.Log($"SYSTEM | Room {number} updated: Type={room.type}, Capacity={room.capacity}, Price={room.pricePerNight:C}");
+    history.Log($"SYSTEM | Room {number} updated.");
     Console.WriteLine($"Room {number} updated successfully!");
-}
+  }
 
 }

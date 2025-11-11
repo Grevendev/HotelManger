@@ -32,19 +32,20 @@ public class Room
   public int capacity;
   [JsonInclude]
   public decimal pricePerNight;
+  [JsonInclude]
+  public string description;
+  [JsonInclude]
+  public string bedType;
+  [JsonInclude]
+  public int bedCount;
+  [JsonInclude]
+  public List<string> amenities;
 
   public Room() { }
 
-  public Room(int number, RoomType type = RoomType.SingleBed, int capacity = 1, decimal pricePerNight = 500)
+  public Room(int number, RoomType type = RoomType.SingleBed, int capacity = 1, decimal pricePerNight = 500, string description = null, string bedType = "Single", int bedCount = 1, List<string>? amenities = null)
   {
-    if (number <= 0) 
-    throw new ArgumentException("Room number must be greater than 0");
-
-    if (capacity <= 0)
-    throw new ArgumentException("Capacity must be greater than 0");
-
-    if (pricePerNight <= 0)
-    throw new ArgumentException("Price per night must be greater than 0");
+    if (number <= 0) throw new ArgumentException("Room number must be greater than 0");
 
     roomNumber = number;
     guestName = null;
@@ -52,6 +53,10 @@ public class Room
     this.type = type;
     this.capacity = capacity;
     this.pricePerNight = pricePerNight;
+    this.description = description ?? "No description provided.";
+    this.bedType = bedType;
+    this.bedCount = bedCount;
+    this.amenities = amenities ?? new List<string>();
   }
 
   public void SetGuest(string guest)
@@ -73,11 +78,14 @@ public class Room
     status = RoomStatus.Unavailable;
   }
 
-  
+
   public override string ToString()
-{
-  string guestInfo = guestName != null ? $" (Guest: {guestName})" : "";
-  return $"Room {roomNumber}: {status}, {type}, Capacity: {capacity}, Price: {pricePerNight:C}{guestInfo}";
-}
+  {
+    string amenityList = amenities.Count > 0 ? string.Join(", ", amenities) : "None";
+    return $"Room {roomNumber}: {status}, {type}, Capacity: {capacity}, Beds: {bedCount} ({bedType}), Price: {pricePerNight:C}, Amenities: {amenityList}" +
+           (guestName != null ? $" ({guestName})" : "");
+  }
+
+
 
 }
