@@ -286,14 +286,20 @@ public class BookingService
   }
 
 
-
   // --- REMOVE ROOM ---
-  public void RemoveRoom(int number)
+  public void RemoveRoom(int number, User user)
   {
     var room = rooms.Find(r => r.roomNumber == number);
     if (room == null)
     {
       Console.WriteLine($"Room {number} does not exist!");
+      return;
+    }
+
+    // Kontrollera permission
+    if (!user.HasPermission("RemoveRoom"))
+    {
+      Console.WriteLine("You do not have permission to remove this room.");
       return;
     }
 
@@ -305,11 +311,13 @@ public class BookingService
 
     rooms.Remove(room);
     repository.SaveRooms(rooms);
-    history.Log($"SYSTEM | Room {number} removed from the hotel.");
+    history.Log($"SYSTEM | Room {number} removed by {user.Username}");
     Console.WriteLine($"Room {number} successfully removed.");
   }
+
+
   //UPDATE ROOM PRICE
-  public void UpdateRoomPrice(int roomNumber, decimal newPrice)
+  public void UpdateRoomPrice(int roomNumber, decimal newPrice, User user)
   {
     var room = rooms.Find(r => r.roomNumber == roomNumber);
     if (room == null)
@@ -317,19 +325,29 @@ public class BookingService
       Console.WriteLine($"Room {roomNumber} not found!");
       return;
     }
+
+    // Kolla permissions
+    if (!user.HasPermission("UpdatePrice"))
+    {
+      Console.WriteLine("You do not have permission to update room prices.");
+      return;
+    }
+
     if (newPrice <= 0)
     {
       Console.WriteLine("Invalid price. Must be greater than zero.");
       return;
     }
+
     room.pricePerNight = newPrice;
     repository.SaveRooms(rooms);
-    history.Log($"SYSTEM | Room {roomNumber} price updated to {newPrice:C}");
+    history.Log($"SYSTEM | Room {roomNumber} price updated to {newPrice:C} by {user.Username}");
     Console.WriteLine($"Room {roomNumber} price updated to {newPrice:C}");
   }
-  // --- UPDATE ROOM INFO (PRICE, CAPACITY, TYPE) ---
+
+
   // --- UPDATE ROOM INFO (TYPE, CAPACITY, PRICE, BED INFO, DESCRIPTION, AMENITIES) ---
-  public void UpdateRoom(int number)
+  public void UpdateRoom(int number, User user)
   {
     var room = rooms.Find(r => r.roomNumber == number);
     if (room == null)
@@ -338,22 +356,34 @@ public class BookingService
       return;
     }
 
+    // Kontrollera permission
+    if (!user.HasPermission("UpdateRoom"))
+    {
+      Console.WriteLine("You do not have permission to update this room.");
+      return;
+    }
+
     Console.WriteLine($"\nUpdating Room {number}");
+
+    // --- TYPE ---
     Console.Write($"Current Type: {room.type} (SingleBed / DoubleBed / Suite, or leave empty): ");
     string? typeInput = Console.ReadLine();
     if (!string.IsNullOrWhiteSpace(typeInput) && Enum.TryParse(typeInput, out RoomType newType))
       room.type = newType;
 
+    // --- CAPACITY ---
     Console.Write($"Current Capacity: {room.capacity} | New (or leave empty): ");
     string? capInput = Console.ReadLine();
     if (int.TryParse(capInput, out int newCap) && newCap > 0)
       room.capacity = newCap;
 
+    // --- PRICE ---
     Console.Write($"Current Price: {room.pricePerNight:C} | New (or leave empty): ");
     string? priceInput = Console.ReadLine();
     if (decimal.TryParse(priceInput, out decimal newPrice) && newPrice > 0)
       room.pricePerNight = newPrice;
 
+    // --- BED INFO ---
     Console.Write($"Current Bed Type: {room.bedType} | New (or leave empty): ");
     string? bedTypeInput = Console.ReadLine();
     if (!string.IsNullOrWhiteSpace(bedTypeInput))
@@ -364,19 +394,22 @@ public class BookingService
     if (int.TryParse(bedCountInput, out int newBedCount) && newBedCount > 0)
       room.bedCount = newBedCount;
 
+    // --- DESCRIPTION ---
     Console.Write($"Current Description: {room.description} | New (or leave empty): ");
     string? descInput = Console.ReadLine();
     if (!string.IsNullOrWhiteSpace(descInput))
       room.description = descInput;
 
+    // --- AMENITIES ---
     Console.WriteLine("Update amenities (comma-separated, leave empty to skip): ");
     string? amenitiesInput = Console.ReadLine();
     if (!string.IsNullOrWhiteSpace(amenitiesInput))
       room.amenities = amenitiesInput.Split(',').Select(a => a.Trim()).ToList();
 
     repository.SaveRooms(rooms);
-    history.Log($"SYSTEM | Room {number} updated.");
+    history.Log($"SYSTEM | Room {number} updated by {user.Username}");
     Console.WriteLine($"Room {number} updated successfully!");
   }
+
 
 }

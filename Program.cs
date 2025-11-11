@@ -36,263 +36,181 @@ while (!exitProgram)
 
   // --- LOGGED IN MENU ---
   while (loggedIn)
-  {
-    Console.Clear();
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("\n╔════════════════════════════════╗");
-    Console.WriteLine("║         HOTEL MAIN MENU        ║");
-    Console.WriteLine("╚════════════════════════════════╝");
-    Console.ResetColor();
-    Console.WriteLine($"Logged in as {activeUser.Username} ({activeUser.Role})");
-    Console.WriteLine();
-    Console.WriteLine("=== MENU ===");
-    Console.WriteLine("1. Show all rooms");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("2. Show available rooms");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("3. Show unavailable rooms");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("4. Filter rooms");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("5. Book a room");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("6. Checkout a room");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("7. Mark room as unavailable");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("8. Logout");
-    Console.WriteLine("------------------------------------");
-
-
-    if (activeUser.Role == UserRole.Admin)
+    while (loggedIn)
     {
-      Console.WriteLine("9. Add new user");
+      Console.Clear();
+      Console.ForegroundColor = ConsoleColor.Cyan;
+      Console.WriteLine("\n╔════════════════════════════════╗");
+      Console.WriteLine("║         HOTEL MAIN MENU        ║");
+      Console.WriteLine("╚════════════════════════════════╝");
+      Console.ResetColor();
+      Console.WriteLine($"Logged in as {activeUser.Username} ({activeUser.Role})");
+      Console.WriteLine();
+      Console.WriteLine("=== MENU ===");
+      Console.WriteLine("1. Show all rooms");
       Console.WriteLine("------------------------------------");
-      Console.WriteLine("10. Add new room");
+      Console.WriteLine("2. Show available rooms");
       Console.WriteLine("------------------------------------");
-      Console.WriteLine("11. Remove room");
+      Console.WriteLine("3. Show unavailable rooms");
       Console.WriteLine("------------------------------------");
-      Console.WriteLine("12. Change room price");
+      Console.WriteLine("4. Filter rooms");
       Console.WriteLine("------------------------------------");
-      Console.WriteLine("13. Update room details (price/capacity/type)");
-    }
+      Console.WriteLine("5. Book a room");
+      Console.WriteLine("------------------------------------");
+      Console.WriteLine("6. Checkout a room");
+      Console.WriteLine("------------------------------------");
+      Console.WriteLine("7. Mark room as unavailable");
+      Console.WriteLine("------------------------------------");
+      Console.WriteLine("8. Logout");
+      Console.WriteLine("------------------------------------");
 
-    Console.WriteLine("14. Show full history");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("15. Filter history");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine("16. Exit program");
-    Console.WriteLine("------------------------------------");
-    Console.WriteLine();
-    Console.Write("Select an option: ");
+      if (activeUser.Role == UserRole.Admin)
+      {
+        Console.WriteLine("9. Add new user");
+        Console.WriteLine("------------------------------------");
+        Console.WriteLine("10. Add new room");
+        Console.WriteLine("------------------------------------");
+        Console.WriteLine("11. Remove room");
+        Console.WriteLine("------------------------------------");
+        Console.WriteLine("12. Change room price");
+        Console.WriteLine("------------------------------------");
+        Console.WriteLine("13. Update room details (all properties)");
+      }
 
-    var choice = Console.ReadLine();
+      Console.WriteLine("14. Show full history");
+      Console.WriteLine("------------------------------------");
+      Console.WriteLine("15. Filter history");
+      Console.WriteLine("------------------------------------");
+      Console.WriteLine("16. Exit program");
+      Console.WriteLine("------------------------------------");
+      Console.WriteLine();
 
-    switch (choice)
-    {
-      case "1":
-        bookingService.ShowAllRooms();
-        break;
+      string choice = InputHelper.GetString("Select an option: ");
 
-      case "2":
-        bookingService.ShowAvailableRooms();
-        break;
+      switch (choice)
+      {
+        case "1":
+          bookingService.ShowAllRooms();
+          break;
 
-      case "3":
-        bookingService.ShowUnavailableRooms();
-        break;
-      case "4":
-        Console.WriteLine("Filter rooms: ");
-        Console.Write("Type (SingleBed(DoubleBed/Suite or leave empty): ");
-        string? tInput = Console.ReadLine();
-        RoomType? fType = Enum.TryParse(tInput, true, out RoomType parsedT) ? parsedT : null;
+        case "2":
+          bookingService.ShowAvailableRooms();
+          break;
 
-        Console.Write("Status (Available/Occupied/Unavailable or leave empty): ");
-        string? sInput = Console.ReadLine();
-        RoomStatus? fStatus = Enum.TryParse(sInput, true, out RoomStatus parsedS) ? parsedS : null;
+        case "3":
+          bookingService.ShowUnavailableRooms();
+          break;
 
-        Console.Write("Minimum price (or leave empty): ");
-        decimal? minPrice = decimal.TryParse(Console.ReadLine(), out decimal minP) ? minP : null;
+        case "4":
+          Console.WriteLine("Filter rooms:");
+          RoomType? fType = InputHelper.GetOptionalEnum<RoomType>("Type (SingleBed/DoubleBed/Suite or leave empty): ");
+          RoomStatus? fStatus = InputHelper.GetOptionalEnum<RoomStatus>("Status (Available/Occupied/Unavailable or leave empty): ");
+          decimal? minPrice = InputHelper.GetOptionalDecimal("Minimum price (or leave empty): ");
+          decimal? maxPrice = InputHelper.GetOptionalDecimal("Maximum price (or leave empty): ");
+          int? minCap = InputHelper.GetOptionalInt("Minimum capacity (or leave empty): ");
+          bookingService.FilterRooms(fType, fStatus, minPrice, maxPrice, minCap);
+          break;
 
-        Console.Write("maximum price (or leave empty): ");
-        decimal? maxPrice = decimal.TryParse(Console.ReadLine(), out decimal maxP) ? maxP : null;
+        case "5":
+          string guest = InputHelper.GetString("Guest name: ");
+          int roomNum = InputHelper.GetInt("Room number: ", minValue: 1);
+          bookingService.BookRoom(guest, roomNum);
+          break;
 
-        Console.Write("Minimum capacity (or leave empty): ");
-        int? mincap = int.TryParse(Console.ReadLine(), out int minC) ? minC : null;
-
-        bookingService.FilterRooms(fType, fStatus, minPrice, maxPrice, mincap);
-        break;
-
-      case "5":
-        Console.Write("Guest name: ");
-        var guest = Console.ReadLine();
-        Console.Write("Room number: ");
-        if (int.TryParse(Console.ReadLine(), out int roomNum))
-          bookingService.BookRoom(guest ?? "Unknown", roomNum);
-        else
-          Console.WriteLine("Invalid room number.");
-        break;
-
-      case "6":
-        Console.Write("Room number to checkout: ");
-        if (int.TryParse(Console.ReadLine(), out int checkoutNum))
+        case "6":
+          int checkoutNum = InputHelper.GetInt("Room number to checkout: ", minValue: 1);
           bookingService.CheckoutRoom(checkoutNum);
-        else
-          Console.WriteLine("Invalid room number.");
-        break;
+          break;
 
-      case "7":
-        Console.Write("Room number to mark unavailable: ");
-        if (int.TryParse(Console.ReadLine(), out int unavailNum))
+        case "7":
+          int unavailNum = InputHelper.GetInt("Room number to mark unavailable: ", minValue: 1);
           bookingService.MakeRoomUnavailable(unavailNum);
-        else
-          Console.WriteLine("Invalid room number.");
-        break;
-
-      case "8":
-        historyService.Log($"{activeUser.Username} logged out.", "LOGOUT");
-        Console.WriteLine("Logging out...");
-        Thread.Sleep(1000);
-        loggedIn = false;
-        break;
-
-      case "9" when activeUser.Role == UserRole.Admin:
-        Console.Write("New username: ");
-        var newUser = Console.ReadLine();
-        Console.Write("Password: ");
-        var newPass = Console.ReadLine();
-        Console.Write("Role (Admin/Receptionist): ");
-        var roleInput = Console.ReadLine();
-
-        var role = Enum.TryParse<UserRole>(roleInput, true, out var parsedRole)
-            ? parsedRole
-            : UserRole.Receptionist;
-
-        var allUsers = fileService.LoadUsers();
-        allUsers.Add(new User(newUser ?? "Unnamed", newPass ?? "1234", role));
-        fileService.SaveUsers(allUsers);
-
-        Console.WriteLine($"User {newUser} added with role {role}.");
-        break;
-
-      case "10" when activeUser.Role == UserRole.Admin:
-        Console.Write("Room number to add: ");
-        string? roomInput = Console.ReadLine();
-
-        if (!int.TryParse(roomInput, out int newRoomNum) || newRoomNum <= 0)
-        {
-          Console.WriteLine("Invalid room number. Must be a positive number.");
           break;
-        }
 
-        Console.Write("Room type (SingleBed/DoubleBed/Suite): ");
-        string? inputType = Console.ReadLine();
-        if (!Enum.TryParse(inputType, true, out RoomType type))
-        {
-          Console.WriteLine("Invalid room type. Defaulting to SingleBed.");
-          type = RoomType.SingleBed;
-        }
-
-        Console.Write("Capacity: ");
-        if (!int.TryParse(Console.ReadLine(), out int capacity) || capacity <= 0)
-        {
-          Console.WriteLine("Invalid capacity. Must be a positive number.");
+        case "8":
+          historyService.Log($"{activeUser.Username} logged out.", "LOGOUT");
+          Console.WriteLine("Logging out...");
+          Thread.Sleep(1000);
+          loggedIn = false;
           break;
-        }
 
-        Console.Write("Price per night (default 500 if left empty): ");
-        string? priceInput = Console.ReadLine();
-        decimal price = 500;
-        if (!string.IsNullOrWhiteSpace(priceInput))
-        {
-          if (!decimal.TryParse(priceInput, out price) || price <= 0)
-          {
-            Console.WriteLine("Invalid price. Must be a positive number.");
-            break;
-          }
-        }
-        Console.Write("Room description: ");
-        string? desc = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(desc)) desc = "Standard room";
-
-        Console.Write("Bed type (Single(Queen/King): ");
-        string? bedType = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(bedType)) bedType = "Single";
-
-        Console.Write("Number of beds: ");
-        int bedCount = int.TryParse(Console.ReadLine(), out int b) && b > 0 ? b : 1;
-
-        bookingService.AddRoom(newRoomNum, type, capacity, price, desc, bedType, bedCount);
-        break;
-
-
-
-      case "11" when activeUser.Role == UserRole.Admin:
-        Console.Write("Room number to remove: ");
-        if (int.TryParse(Console.ReadLine(), out int removeRoomNum))
-          bookingService.RemoveRoom(removeRoomNum);
-        else
-          Console.WriteLine("Invalid room number.");
-        break;
-
-      case "12" when activeUser.Role == UserRole.Admin:
-        Console.Write("Enter room number to update: ");
-        if (!int.TryParse(Console.ReadLine(), out int priceRoomNum))
-        {
-          Console.WriteLine("Invalid room number.");
+        case "9" when activeUser.Role == UserRole.Admin:
+          string newUser = InputHelper.GetString("New username: ");
+          string newPass = InputHelper.GetString("Password: ");
+          UserRole role = InputHelper.GetEnum("Role (Admin/Receptionist): ", UserRole.Receptionist);
+          var allUsers = fileService.LoadUsers();
+          allUsers.Add(new User(newUser, newPass, role));
+          fileService.SaveUsers(allUsers);
+          Console.WriteLine($"User {newUser} added with role {role}.");
           break;
-        }
-        Console.Write("Enter new price per night: ");
-        if (!decimal.TryParse(Console.ReadLine(), out decimal newPrice))
-        {
-          Console.WriteLine("Invalid price.");
+
+        case "10" when activeUser.Role == UserRole.Admin:
+        case "10" when activeUser.Role == UserRole.Receptionist && activeUser.HasPermission("AddRoom"):
+          int newRoomNum = InputHelper.GetInt("Room number to add: ", minValue: 1);
+          RoomType type = InputHelper.GetEnum("Room type (SingleBed/DoubleBed/Suite): ", RoomType.SingleBed);
+          int capacity = InputHelper.GetInt("Capacity: ", minValue: 1);
+          decimal price = InputHelper.GetDecimal("Price per night (default 500 if empty): ", minValue: 1, allowEmpty: true);
+          string desc = InputHelper.GetString("Room description: ", allowEmpty: true);
+          if (string.IsNullOrWhiteSpace(desc)) desc = "Standard room";
+          string bedType = InputHelper.GetString("Bed type (Single/Queen/King): ", allowEmpty: true);
+          if (string.IsNullOrWhiteSpace(bedType)) bedType = "Single";
+          int bedCount = InputHelper.GetInt("Number of beds: ", minValue: 1);
+          bookingService.AddRoom(newRoomNum, type, capacity, price > 0 ? price : 500, desc, bedType, bedCount);
           break;
-        }
-        bookingService.UpdateRoomPrice(priceRoomNum, newPrice);
-        break;
 
-      case "13" when activeUser.Role == UserRole.Admin:
-        Console.Write("Enter room number to update: ");
-        if (int.TryParse(Console.ReadLine(), out int updateNum))
-          bookingService.UpdateRoom(updateNum);
-        else
-          Console.WriteLine("Invalid room number.");
-        break;
+        case "11" when activeUser.Role == UserRole.Admin:
+        case "11" when activeUser.Role == UserRole.Receptionist && activeUser.HasPermission("RemoveRoom"):
+          int removeRoomNum = InputHelper.GetInt("Room number to remove: ", minValue: 1);
+          bookingService.RemoveRoom(removeRoomNum, activeUser);
+          break;
 
-      case "14":
-        Console.WriteLine("Hotel History:");
-        historyService.DisplayHistory();
-        break;
+        case "12" when activeUser.Role == UserRole.Admin:
+        case "12" when activeUser.Role == UserRole.Receptionist && activeUser.HasPermission("ChangePrice"):
+          int priceRoomNum = InputHelper.GetInt("Enter room number to update: ", minValue: 1);
+          decimal newPrice = InputHelper.GetDecimal("Enter new price per night: ", minValue: 1);
+          bookingService.UpdateRoomPrice(priceRoomNum, newPrice, activeUser);
+          break;
 
-      case "15":
-        Console.Write("Keyword (optional): ");
-        var keyword = Console.ReadLine();
-        Console.Write("From date (yyyy-MM-dd) or blank: ");
-        var fromInput = Console.ReadLine();
-        Console.Write("To date (yyyy-MM-dd) or blank: ");
-        var toInput = Console.ReadLine();
+        case "13" when activeUser.Role == UserRole.Admin:
+        case "13" when activeUser.Role == UserRole.Receptionist && activeUser.HasPermission("UpdateRoom"):
+          int updateNum = InputHelper.GetInt("Enter room number to update: ", minValue: 1);
+          bookingService.UpdateRoom(updateNum, activeUser);
+          break;
 
-        DateTime? from = DateTime.TryParse(fromInput, out var f) ? f : null;
-        DateTime? to = DateTime.TryParse(toInput, out var t) ? t : null;
+        case "14":
+          Console.WriteLine("Hotel History:");
+          historyService.DisplayHistory();
+          break;
 
-        var filtered = historyService.FilterHistory(from, to, keyword);
-        historyService.DisplayHistory(filtered);
-        break;
+        case "15":
+          string keyword = InputHelper.GetString("Keyword (optional): ", allowEmpty: true);
+          DateTime? from = InputHelper.GetOptionalDate("From date (yyyy-MM-dd) or blank: ");
+          DateTime? to = InputHelper.GetOptionalDate("To date (yyyy-MM-dd) or blank: ");
+          var filtered = historyService.FilterHistory(from, to, keyword);
+          historyService.DisplayHistory(filtered);
+          break;
 
-      case "16":
-        Console.WriteLine("Exiting program...");
-        Thread.Sleep(1000);
-        loggedIn = false;
-        exitProgram = true;
-        break;
+        case "16":
+          Console.WriteLine("Exiting program...");
+          Thread.Sleep(1000);
+          loggedIn = false;
+          exitProgram = true;
+          break;
 
-      default:
-        Console.WriteLine("Invalid option, try again.");
-        break;
+        default:
+          Console.WriteLine("Invalid option, try again.");
+          break;
+      }
+
+      Console.WriteLine();
+      Console.WriteLine("Press any key to continue...");
+      Console.ReadKey();
     }
 
-    Console.WriteLine();
-    Console.WriteLine("Press any key to continue...");
-    Console.ReadKey();
-  }
+
+
+
+
+
+
 }
