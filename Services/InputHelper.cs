@@ -2,7 +2,7 @@ namespace Hotel.Services;
 
 public static class InputHelper
 {
-  // --- Hämta positivt heltal ---
+  // --- Get a positive integer ---
   public static int GetInt(string prompt, int minValue = 1, int maxValue = int.MaxValue, bool allowEmpty = false)
   {
     while (true)
@@ -11,7 +11,7 @@ public static class InputHelper
       string? input = Console.ReadLine()?.Trim();
 
       if (allowEmpty && string.IsNullOrWhiteSpace(input))
-        return 0; // fallback för optional utan default
+        return 0; // fallback for optional without default
 
       if (int.TryParse(input, out int value) && value >= minValue && value <= maxValue)
         return value;
@@ -28,7 +28,7 @@ public static class InputHelper
     return int.TryParse(input, out int value) && value >= minValue ? value : GetOptionalInt(prompt, minValue);
   }
 
-  // --- Hämta positiv decimal ---
+  // --- Retrieve positive decimal ---
   public static decimal GetDecimal(string prompt, decimal minValue = 0, decimal maxValue = decimal.MaxValue, bool allowEmpty = false)
   {
     while (true)
@@ -54,7 +54,7 @@ public static class InputHelper
     return decimal.TryParse(input, out decimal value) && value >= minValue ? value : GetOptionalDecimal(prompt, minValue);
   }
 
-  // --- Hämta sträng ---
+  // --- Retrieve string ---
   public static string GetString(string prompt, bool allowEmpty = false)
   {
     while (true)
@@ -76,7 +76,7 @@ public static class InputHelper
     return !string.IsNullOrWhiteSpace(input) ? input : fallback;
   }
 
-  // --- Hämta enum ---
+  // --- Fetch enum ---
   public static T GetEnum<T>(string prompt, T fallback) where T : struct, Enum
   {
     Console.Write(prompt);
@@ -96,7 +96,7 @@ public static class InputHelper
     return Enum.TryParse<T>(input, true, out T val) ? val : GetOptionalEnum<T>(prompt);
   }
 
-  // --- Hämta datum ---
+  // --- Fetch date ---
   public static DateTime GetDate(string prompt)
   {
     while (true)
@@ -119,7 +119,7 @@ public static class InputHelper
     return DateTime.TryParse(input, out DateTime date) ? date : GetOptionalDate(prompt);
   }
 
-  // --- Ja/Nej val ---
+  // --- Yes/No choice ---
   public static bool GetYesNo(string prompt)
   {
     while (true)

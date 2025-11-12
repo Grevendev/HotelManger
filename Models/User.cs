@@ -1,11 +1,16 @@
+// File: Models/User.cs
+using Hotel.Services;
+
 namespace Hotel.Models
 {
   public class User
   {
-    public string Username;
-    public string Password;
-    public UserRole Role;
-    public List<string> TempPermissions { get; set; } = new();
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public UserRole Role { get; set; }
+
+    // List of temporary rights
+    public List<TemporaryPermission> TemporaryPermissions { get; set; } = new();
 
     public User(string username, string password, UserRole role = UserRole.Receptionist)
     {
@@ -14,22 +19,33 @@ namespace Hotel.Models
       Role = role;
     }
 
-    // Kontrollera om användaren har permission
-    public bool HasPermission(string permission)
+    // Check if the user has a permission (permanent or temporary)
+    public bool HasPermission(Permission permission)
     {
-      return Role == UserRole.Admin || TempPermissions.Contains(permission);
+      // Admin always has full access
+      if (Role == UserRole.Admin)
+        return true;
+
+      // Check the role's permanent permissions via RolePermissions
+      if (RolePermissions.RolePermissionMap.TryGetValue(Role, out var perms) && perms.Contains(permission))
+        return true;
+
+      // Check temporary permissions and clear expired ones
+      TemporaryPermissions.RemoveAll(tp => tp.Expiry <= DateTime.Now);
+      return TemporaryPermissions.Any(tp => tp.Permission == permission && tp.IsActive);
     }
 
-    public void GrantTempPermission(string permission)
+    // Grant temporary permission
+    public void GrantTemporaryPermission(Permission permission, TimeSpan duration)
     {
-      if (!TempPermissions.Contains(permission))
-        TempPermissions.Add(permission);
+      var expiry = DateTime.Now.Add(duration);
+      TemporaryPermissions.Add(new TemporaryPermission(permission, expiry));
     }
 
-    public void RevokeTempPermission(string permission)
+    // Remove temporary permission
+    public void RevokeTemporaryPermission(Permission permission)
     {
-      if (TempPermissions.Contains(permission))
-        TempPermissions.Remove(permission);
+      TemporaryPermissions.RemoveAll(tp => tp.Permission == permission);
     }
   }
 
