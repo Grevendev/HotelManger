@@ -50,7 +50,8 @@ namespace Hotel.Services
         DisplayRoom(room);
     }
 
-    public void BookRoom(string guest, int roomNumber)
+
+    public void BookRoom(string guest, int roomNumber, int stayDays = 1)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
       if (room == null)
@@ -65,10 +66,14 @@ namespace Hotel.Services
         return;
       }
 
-      room.SetGuest(guest);
+      room.Status = RoomStatus.Occupied;
+      room.GuestName = guest;
+      room.CheckInDate = DateTime.Now;
+      room.CheckOutDate = DateTime.Now.AddDays(stayDays); // Here we set the check-out date
       _history.Log($"BOOKED | Room {roomNumber} booked for {guest}");
-      Console.WriteLine($"Room {roomNumber} booked successfully for {guest}.");
+      Console.WriteLine($"Room {roomNumber} booked successfully for {guest}. Check-out date: {room.CheckOutDate:yyyy-MM-dd}");
     }
+
 
     public void CheckoutRoom(int roomNumber)
     {
@@ -189,6 +194,21 @@ namespace Hotel.Services
     private void DisplayRoom(Room room)
     {
       Console.WriteLine($"Room {room.Number} | Type: {room.Type} | Status: {room.Status} | Capacity: {room.Capacity} | Price: {room.PricePerNight:C} | Beds: {room.BedCount} {room.BedType}");
+    }
+    public void AutoCheckoutExpiredRooms()
+    {
+      foreach (var room in _rooms)
+      {
+        if (room.Status == RoomStatus.Occupied && room.CheckOutDate.HasValue)
+        {
+          if (DateTime.Now >= room.CheckOutDate.Value)
+          {
+            Console.WriteLine($"Room {room.Number} auto-checked out (Guest: {room.GuestName})");
+            _history.Log($"AUTO-CHECKOUT | Room {room.Number} auto-checked out. Guest: {room.GuestName}");
+            room.ClearGuest();
+          }
+        }
+      }
     }
   }
 }

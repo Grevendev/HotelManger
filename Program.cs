@@ -2,7 +2,7 @@
 using Hotel.Services;
 
 // --- Load data ---
-var fileService = new FileService(); // Hanterar filbaserad lagring av users och rooms
+var fileService = new FileService(); // Handles file-based storage of users and rooms
 var users = fileService.LoadUsers();
 var rooms = fileService.LoadRooms();
 
@@ -10,6 +10,14 @@ var historyService = new HistoryService();
 var bookingService = new BookingService(rooms, historyService);
 var permService = new PermissionService(users);
 
+foreach (var room in rooms)
+{
+  if (room.Status == RoomStatus.Occupied && room.CheckOutDate.HasValue && room.CheckOutDate.Value <= DateTime.Now)
+  {
+    bookingService.CheckoutRoom(room.Number);
+    Console.WriteLine($"Room {room.Number} automatically checked out (past CheckOutDate).");
+  }
+}
 bool exitProgram = false;
 
 while (!exitProgram)
