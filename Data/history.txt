@@ -16,3 +16,7 @@
 2025-10-31 11:19:06 | INFO | BOOKED | Guest 'Kalle' booked Room 1
 2025-11-03 09:43:15 | LOGIN | pop logged in.
 2025-11-03 09:44:17 | LOGOUT | pop logged out.
+2025-11-13 15:43:16 | LOGIN | admin logged in.
+2025-11-13 15:44:33 | LOGOUT | admin logged out.
+2025-11-13 15:44:44 | LOGIN | pop logged in.
+2025-11-13 15:45:09 | LOGOUT | pop logged out.

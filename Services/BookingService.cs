@@ -7,6 +7,7 @@ namespace Hotel.Services
   {
     private readonly List<Room> _rooms;
     private readonly HistoryService _history;
+    private readonly List<Reservation> _reservations = new();
 
     public BookingService(List<Room> rooms, HistoryService history)
     {
@@ -26,6 +27,62 @@ namespace Hotel.Services
       Console.WriteLine("--- Available Rooms ---");
       foreach (var room in _rooms.Where(r => r.Status == RoomStatus.Available))
         DisplayRoom(room);
+    }
+
+    public void BookRoomInAdvance(string guest, int roomNumber, DateTime checkIn, int stayDays)
+    {
+      var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
+      if (room == null)
+      {
+        Console.WriteLine($"Room {roomNumber} not found!");
+        return;
+      }
+      if (checkIn.Date <= DateTime.Now.Date)
+      {
+        Console.WriteLine("Check-in date must be in the future.");
+        return;
+      }
+      //Check if room has overlapping bookings
+      var checkOut = checkIn.AddDays(stayDays);
+
+      bool overlaps = _reservations.Any(r =>
+      r.RoomNumber == roomNumber && (checkIn < r.CheckOutDate && checkOut > r.CheckInDate));
+
+
+      if (overlaps)
+      {
+        Console.WriteLine("Room is already booked dureing that period.");
+        return;
+      }
+      _reservations.Add(new Reservation(roomNumber, guest, checkIn, checkOut));
+      _history.Log($"RESERVATION | Room {roomNumber} reserved by {guest} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd}");
+      Console.WriteLine($"Room {roomNumber} reserved successfully for {guest}.");
+    }
+
+    public void ActivateTodaysReservations()
+    {
+      var today = DateTime.Now.Date;
+
+      var dueReservations = _reservations
+      .Where(r => r.CheckInDate.Date <= today)
+      .ToList();
+
+      foreach (var res in dueReservations)
+      {
+        var room = _rooms.FirstOrDefault(r => r.Number == res.RoomNumber);
+        if (room == null) continue;
+
+        room.Status = RoomStatus.Occupied;
+        room.GuestName = res.Guest;
+        room.CheckInDate = res.CheckInDate;
+        room.CheckOutDate = res.CheckOutDate;
+
+        _history.Log($"ACTIVATE | Room {room.Number} auto-activated for {res.Guest} (reservation started)");
+
+        Console.WriteLine($"Room {room.Number} is now occupied for {res.Guest} (reservation began).");
+
+        _reservations.Remove(res);
+      }
     }
 
     public void ShowUnavailableRooms()
