@@ -41,6 +41,14 @@ namespace Hotel.Services
         Console.WriteLine($"Room {roomNumber} not found!");
         return;
       }
+      if (room.Status == RoomStatus.UnderMaintenance)
+      {
+        if (room.Status == RoomStatus.UnderMaintenance)
+        {
+          Console.WriteLine($"Room {roomNumber} is under maintenance and cannot be booked for future stays.");
+          return;
+        }
+      }
 
       if (checkIn.Date <= DateTime.Now.Date)
       {
@@ -48,7 +56,7 @@ namespace Hotel.Services
         return;
       }
 
-      // Kontrollera överlappande bokningar
+
       var checkOut = checkIn.AddDays(stayDays);
       bool overlaps = _reservations.Any(r =>
           r.RoomNumber == roomNumber && checkIn < r.CheckOutDate && checkOut > r.CheckInDate);
@@ -59,10 +67,10 @@ namespace Hotel.Services
         return;
       }
 
-      // Beräkna totalpris med rabatter
+
       decimal totalPrice = ApplyDiscounts(room, stayDays) * stayDays;
 
-      // Lägg till reservation
+
       _reservations.Add(new Reservation(roomNumber, guest, checkIn, checkOut));
 
       _history.Log($"RESERVATION | Room {roomNumber} reserved by {guest} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd}, Total: {totalPrice:C}");
@@ -242,6 +250,11 @@ namespace Hotel.Services
         Console.WriteLine($"Room {roomNumber} not found!");
         return;
       }
+      if (room.Status == RoomStatus.UnderMaintenance)
+      {
+        Console.WriteLine("Room is under maintenance and cannot be booked.");
+        return;
+      }
 
       if (room.Status != RoomStatus.Available)
       {
@@ -355,6 +368,124 @@ namespace Hotel.Services
       room.Status = RoomStatus.Available;
       _history.Log($"CLEANED | Room {room.Number} has been cleaned and is available.");
       Console.WriteLine($"Room {room.Number} is now clean and available.");
+
+      _fileService.SaveRooms(_rooms);
+    }
+    public void AutoReleaseMaintenance()
+    {
+      var today = DateTime.Today;
+
+      foreach (var room in _rooms)
+      {
+        if (room.Status == RoomStatus.UnderMaintenance && room.MaintenanceEnd != null && room.MaintenanceEnd < today)
+        {
+          room.Status = RoomStatus.Available;
+          room.MaintenanceStart = null;
+          room.MaintenanceEnd = null;
+
+          _history.Log($"MAINTENANCE_END | Room {room.Number} automatically set to Available.");
+
+          Console.WriteLine($"Room {room.Number} maintenance period ended. Now AVAILABLE.");
+        }
+      }
+      _fileService.SaveRooms(_rooms);
+    }
+
+    public void MarkRoomUnderMaintenance(int roomNumber, DateTime start, DateTime end, User user)
+    {
+      if (user.Role != UserRole.Admin)
+      {
+        Console.WriteLine("Only admins can set room maintenance.");
+        return;
+      }
+      var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
+      if (room == null)
+      {
+        Console.WriteLine("Room not found.");
+        return;
+      }
+      if (end <= start)
+      {
+        Console.WriteLine("End date must be after start date.");
+        return;
+      }
+      if (room.Status == RoomStatus.Occupied)
+      {
+        Console.WriteLine("Room is occupied, maintenance cannot be scheduled.");
+        return;
+      }
+      bool conflict = _reservations.Any(r => r.RoomNumber == roomNumber && start < r.CheckOutDate && end > r.CheckInDate);
+
+      if (conflict)
+      {
+        Console.WriteLine("Reservation conflict detected.");
+        return;
+      }
+      room.Status = RoomStatus.UnderMaintenance;
+      room.MaintenanceStart = start;
+      room.MaintenanceEnd = end;
+
+      _history.Log($"MAINTENANCE_START | Room {roomNumber} scheduled {start:yyyy-MM-dd} → {end:yyyy-MM-dd}");
+
+      Console.WriteLine($"Room {roomNumber} is now UNDER MAINTENANCE.");
+      _fileService.SaveRooms(_rooms);
+    }
+    public void EndMaintenance(int roomNumber, User user)
+    {
+      if (user.Role != UserRole.Admin)
+      {
+        Console.WriteLine("Only admins can end maintenance.");
+        return;
+      }
+      var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
+      if (room == null)
+      {
+        Console.WriteLine("Room not found.");
+        return;
+      }
+      if (room.Status != RoomStatus.UnderMaintenance)
+      {
+        Console.WriteLine("Room is not under maintenance.");
+        return;
+      }
+      room.Status = RoomStatus.Available;
+      room.MaintenanceStart = null;
+      room.MaintenanceEnd = null;
+
+      _history.Log($"MAINTENANCE_END | Room {roomNumber} manually set to Available.");
+
+      Console.WriteLine($"Room {roomNumber} maintenance ended manually. Now AVAILABLE.");
+
+      _fileService.SaveRooms(_rooms);
+    }
+    public void ExtendMaintenance(int roomNumber, DateTime newEndDate, User user)
+    {
+      if (user.Role != UserRole.Admin)
+      {
+        Console.WriteLine("Only admins can extend maintenance.");
+        return;
+      }
+      var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
+      if (room == null)
+      {
+        Console.WriteLine("Room not found.");
+        return;
+      }
+      if (room.Status != RoomStatus.UnderMaintenance)
+      {
+        Console.WriteLine("Room is not currently udner maintenance.");
+        return;
+      }
+      if (newEndDate <= room.MaintenanceStart)
+      {
+        Console.WriteLine("New end date must be after the start date.");
+        return;
+      }
+      room.MaintenanceEnd = newEndDate;
+
+      _history.Log($"MAINTENANCE_EXTEND | Room {roomNumber} extended to {newEndDate:yyyy-MM-dd}");
+
+      Console.WriteLine($"Room {room.Number} maintenance extended to {newEndDate:yyyy-MM-dd}");
 
       _fileService.SaveRooms(_rooms);
     }

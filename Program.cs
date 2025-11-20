@@ -10,6 +10,7 @@ var historyService = new HistoryService();
 var bookingService = new BookingService(rooms, historyService, fileService);
 var permService = new PermissionService(users);
 bookingService.ActivateTodaysReservations();
+bookingService.AutoReleaseMaintenance();
 
 foreach (var room in rooms)
 {
@@ -71,10 +72,10 @@ while (!exitProgram)
     Console.WriteLine("7. Mark room as unavailable");
     Console.WriteLine("8. Book room in advance");
     Console.WriteLine("9. Cancel future booking");
-    Console.WriteLine("10.Confirm future booking");
+    Console.WriteLine("10. Confirm future booking");
     Console.WriteLine("11. Print booking receipt");
     Console.WriteLine("12. Mark room as cleaned");
-    Console.WriteLine("13.Mark room cleaning in progress");
+    Console.WriteLine("13. Mark room cleaning in progress");
     Console.WriteLine("14. Logout");
 
 
@@ -106,6 +107,14 @@ while (!exitProgram)
 
     if (activeUser.Role == UserRole.Admin)
       Console.WriteLine($"{menuIndex++}. Add discount/campaign");
+
+    if (activeUser.Role == UserRole.Admin)
+    {
+      Console.WriteLine($"{menuIndex++}. Mark room as under maintenance");
+      Console.WriteLine($"{menuIndex++}. End maintenance for a room");
+      Console.WriteLine($"{menuIndex++}. Extend maintenance period");
+    }
+
 
 
     Console.WriteLine($"{menuIndex}. Exit program");
@@ -196,10 +205,7 @@ while (!exitProgram)
         loggedIn = false;
         break;
 
-      // ---------------------------------------------
-      // EVERYTHING BELOW IS UNCHANGED LOGICALLY
-      // Only the case numbers shifted automatically
-      // ---------------------------------------------
+
       case "15" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddUser):
         string newUser = InputHelper.GetString("New username: ");
         string newPass = InputHelper.GetString("Password: ");
@@ -266,7 +272,26 @@ while (!exitProgram)
         bookingService.AddDiscount(discount);
         break;
 
-      case "24":
+      case "24" when activeUser.Role == UserRole.Admin:
+        int m1 = InputHelper.GetInt("Room number: ");
+        DateTime ms = InputHelper.GetDate("Start date: ");
+        DateTime me = InputHelper.GetDate("End date: ");
+        bookingService.MarkRoomUnderMaintenance(m1, ms, me, activeUser);
+        break;
+
+      case "25" when activeUser.Role == UserRole.Admin:
+        int m2 = InputHelper.GetInt("Room number: ");
+        bookingService.EndMaintenance(m2, activeUser);
+        break;
+
+      case "26" when activeUser.Role == UserRole.Admin:
+        int m3 = InputHelper.GetInt("Room number: ");
+        DateTime newEnd = InputHelper.GetDate("New end date: ");
+        bookingService.ExtendMaintenance(m3, newEnd, activeUser);
+        break;
+
+
+      case "27":
         Console.WriteLine("Exiting program...");
         Thread.Sleep(1000);
         loggedIn = false;
@@ -282,5 +307,4 @@ while (!exitProgram)
     Console.WriteLine("Press any key to continue...");
     Console.ReadKey();
   }
-
 }
