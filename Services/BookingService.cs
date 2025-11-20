@@ -119,6 +119,26 @@ namespace Hotel.Services
       Console.WriteLine($"Future reservation for room {roomNumber} has been cancelled.");
     }
 
+    public void ConfirmFutureBooking(int roomNumber)
+    {
+      var reservation = _reservations.FirstOrDefault(r => r.RoomNumber == roomNumber);
+      if (reservation == null)
+      {
+        Console.WriteLine("No future booking found for this room.");
+        return;
+      }
+      if (reservation.IsConfirmed)
+      {
+        Console.WriteLine("This booking is already confirmed.");
+        return;
+      }
+      reservation.IsConfirmed = true;
+      _history.Log($"CONFIRM | Future booking for room {roomNumber} confirmed for {reservation.Guest}");
+      Console.WriteLine($"Future booking for Room {roomNumber} confirmed for {reservation.Guest}.");
+
+      _fileService.SaveReservations(_reservations);
+    }
+
 
     public void ShowUnavailableRooms()
     {

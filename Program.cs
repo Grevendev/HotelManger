@@ -71,10 +71,11 @@ while (!exitProgram)
     Console.WriteLine("7. Mark room as unavailable");
     Console.WriteLine("8. Book room in advance");
     Console.WriteLine("9. Cancel future booking");
-    Console.WriteLine("10. Logout");
+    Console.WriteLine("10.Confirm future booking");
+    Console.WriteLine("11. Logout");
 
 
-    int menuIndex = 11;
+    int menuIndex = 12;
 
     if (activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddUser))
       Console.WriteLine($"{menuIndex++}. Add new user");
@@ -160,8 +161,13 @@ while (!exitProgram)
         bookingService.CancelFutureBooking(cancel);
         break;
 
-
       case "10":
+        int confirmRoom = InputHelper.GetInt("Room number to confirm for future booking: ", 1);
+        bookingService.ConfirmFutureBooking(confirmRoom);
+        break;
+
+
+      case "11":
         historyService.Log($"{activeUser.Username} logged out.", "LOGOUT");
         Console.WriteLine("Logging out...");
         Thread.Sleep(1000);
@@ -172,7 +178,7 @@ while (!exitProgram)
       // EVERYTHING BELOW IS UNCHANGED LOGICALLY
       // Only the case numbers shifted automatically
       // ---------------------------------------------
-      case "11" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddUser):
+      case "12" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddUser):
         string newUser = InputHelper.GetString("New username: ");
         string newPass = InputHelper.GetString("Password: ");
         UserRole role = InputHelper.GetEnum("Role (Admin/Receptionist): ", UserRole.Receptionist);
@@ -181,7 +187,7 @@ while (!exitProgram)
         Console.WriteLine($"User {newUser} added with role {role}.");
         break;
 
-      case "12" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddRoom):
+      case "13" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddRoom):
         int newRoomNum = InputHelper.GetInt("Room number to add: ", minValue: 1);
         RoomType type = InputHelper.GetEnum("Room type (SingleBed/DoubleBed/Suite): ", RoomType.SingleBed);
         int capacity = InputHelper.GetInt("Capacity: ", minValue: 1);
@@ -194,12 +200,12 @@ while (!exitProgram)
         bookingService.AddRoom(newRoomNum, type, capacity, price, desc, bedType, bedCount);
         break;
 
-      case "13" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.RemoveRoom):
+      case "14" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.RemoveRoom):
         int removeRoomNum = InputHelper.GetInt("Room number to remove: ", minValue: 1);
         bookingService.RemoveRoom(removeRoomNum, activeUser);
         break;
 
-      case "14" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.UpdateRoomPrice):
+      case "15" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.UpdateRoomPrice):
         int priceRoomNum = InputHelper.GetInt("Enter room number to update price: ", minValue: 1);
         decimal newPrice = InputHelper.GetDecimal("Enter new price: ", minValue: 1);
         bookingService.UpdateRoomPrice(priceRoomNum, newPrice, activeUser);

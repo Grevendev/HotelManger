@@ -6,6 +6,7 @@ namespace Hotel.Models
     public string Guest { get; set; }
     public DateTime CheckInDate { get; set; }
     public DateTime CheckOutDate { get; set; }
+    public bool IsConfirmed { get; set; } = false;
 
     public Reservation(int roomNumber, string guest, DateTime checkIn, DateTime checkOut)
     {
