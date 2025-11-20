@@ -102,6 +102,10 @@ while (!exitProgram)
     if (activeUser.HasPermission(Permission.ManagePermissions))
       Console.WriteLine($"{menuIndex++}. Manage temporary permissions");
 
+    if (activeUser.Role == UserRole.Admin)
+      Console.WriteLine($"{menuIndex++}. Add discount/campaign");
+
+
     Console.WriteLine($"{menuIndex}. Exit program");
 
     string choice = InputHelper.GetString("Select an option: ");
@@ -238,7 +242,19 @@ while (!exitProgram)
         permService.ManagePermissionsMenu(activeUser);
         break;
 
-      case "21":
+      case "21" when activeUser.Role == UserRole.Admin:
+        string dName = InputHelper.GetString("Discount name: ");
+        DiscountType dType = InputHelper.GetEnum("Type (Percentage/FixedAmount): ", DiscountType.Percentage);
+        decimal dValue = InputHelper.GetDecimal("Value: ", minValue: 0);
+        RoomType? rType = InputHelper.GetOptionalEnum<RoomType>("Optional room type or leave empty: ");
+        DateTime? start = InputHelper.GetOptionalDate("Start date (yyyy-MM-dd) or leave empty: ");
+        DateTime? end = InputHelper.GetOptionalDate("End date (yyyy-MM-dd) or leave empty: ");
+        int? minStay = InputHelper.GetOptionalInt("Minimum stay days or leave empty: ");
+        var discount = new Discount(dName, dType, dValue) { RoomType = rType, StartDate = start, EndDate = end, MinStayDays = minStay };
+        bookingService.AddDiscount(discount);
+        break;
+
+      case "22":
         Console.WriteLine("Exiting program...");
         Thread.Sleep(1000);
         loggedIn = false;

@@ -25,7 +25,7 @@ namespace Hotel.Models
     [JsonInclude] public int Number { get; set; }
     [JsonInclude] public string? GuestName { get; set; }
     [JsonInclude] public DateTime? CheckInDate { get; set; }
-    [JsonInclude] public DateTime? CheckOutDate { get; set; }   // <<--- NY
+    [JsonInclude] public DateTime? CheckOutDate { get; set; }
     [JsonInclude] public RoomStatus Status { get; set; } = RoomStatus.Available;
     [JsonInclude] public RoomType Type { get; set; } = RoomType.SingleBed;
     [JsonInclude] public int Capacity { get; set; } = 1;

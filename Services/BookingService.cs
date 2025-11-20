@@ -9,6 +9,7 @@ namespace Hotel.Services
     private readonly List<Room> _rooms;
     private readonly HistoryService _history;
     private readonly List<Reservation> _reservations = new();
+    private readonly List<Discount> _discounts = new();
 
     public BookingService(List<Room> rooms, HistoryService history, FileService fileService)
     {
@@ -40,27 +41,35 @@ namespace Hotel.Services
         Console.WriteLine($"Room {roomNumber} not found!");
         return;
       }
+
       if (checkIn.Date <= DateTime.Now.Date)
       {
         Console.WriteLine("Check-in date must be in the future.");
         return;
       }
-      //Check if room has overlapping bookings
+
+      // Kontrollera överlappande bokningar
       var checkOut = checkIn.AddDays(stayDays);
-
       bool overlaps = _reservations.Any(r =>
-      r.RoomNumber == roomNumber && (checkIn < r.CheckOutDate && checkOut > r.CheckInDate));
-
+          r.RoomNumber == roomNumber && checkIn < r.CheckOutDate && checkOut > r.CheckInDate);
 
       if (overlaps)
       {
-        Console.WriteLine("Room is already booked dureing that period.");
+        Console.WriteLine("Room is already booked during that period.");
         return;
       }
+
+      // Beräkna totalpris med rabatter
+      decimal totalPrice = ApplyDiscounts(room, stayDays) * stayDays;
+
+      // Lägg till reservation
       _reservations.Add(new Reservation(roomNumber, guest, checkIn, checkOut));
-      _history.Log($"RESERVATION | Room {roomNumber} reserved by {guest} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd}");
-      Console.WriteLine($"Room {roomNumber} reserved successfully for {guest}.");
+
+      _history.Log($"RESERVATION | Room {roomNumber} reserved by {guest} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd}, Total: {totalPrice:C}");
+
+      Console.WriteLine($"Room {roomNumber} reserved successfully for {guest} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd}. Total price: {totalPrice:C}");
     }
+
 
     public void ActivateTodaysReservations()
     {
@@ -182,6 +191,25 @@ namespace Hotel.Services
       Console.WriteLine($"Receipt saved to {fileName}");
     }
 
+    public void AddDiscount(Discount discount)
+    {
+      _discounts.Add(discount);
+      _history.Log($"SYSTEM | Discount '{discount.Name}' added.");
+      Console.WriteLine($"Discount '{discount.Name}' added successfully.");
+    }
+    public decimal ApplyDiscounts(Room room, int stayDays)
+    {
+      decimal finalPrice = room.PricePerNight;
+      foreach (var discount in _discounts)
+      {
+        if (discount.IsActive(room.Type, room.CheckInDate ?? DateTime.Now, stayDays))
+        {
+          finalPrice = discount.Apply(finalPrice);
+          Console.WriteLine($"Applied discount '{discount.Name}': new price {finalPrice:C}");
+        }
+      }
+      return finalPrice;
+    }
 
     public void ShowUnavailableRooms()
     {
@@ -225,8 +253,9 @@ namespace Hotel.Services
       room.GuestName = guest;
       room.CheckInDate = DateTime.Now;
       room.CheckOutDate = DateTime.Now.AddDays(stayDays); // Here we set the check-out date
-      _history.Log($"BOOKED | Room {roomNumber} booked for {guest}");
-      Console.WriteLine($"Room {roomNumber} booked successfully for {guest}. Check-out date: {room.CheckOutDate:yyyy-MM-dd}");
+      decimal totalPrice = ApplyDiscounts(room, stayDays) * stayDays;
+      _history.Log($"BOOKED | Room {roomNumber} booked for {guest}, total {totalPrice:C}");
+      Console.WriteLine($"Room {roomNumber} booked successfully for {guest}. " + $"Check-out date: {room.CheckOutDate:yyyy-MM-dd}, Total price: {totalPrice:C}");
     }
 
 
