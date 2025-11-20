@@ -56,7 +56,6 @@ namespace Hotel.Services
         return;
       }
 
-
       var checkOut = checkIn.AddDays(stayDays);
       bool overlaps = _reservations.Any(r =>
           r.RoomNumber == roomNumber && checkIn < r.CheckOutDate && checkOut > r.CheckInDate);
@@ -67,7 +66,6 @@ namespace Hotel.Services
         return;
       }
 
-
       decimal totalPrice = ApplyDiscounts(room, stayDays) * stayDays;
 
 
@@ -77,8 +75,6 @@ namespace Hotel.Services
 
       Console.WriteLine($"Room {roomNumber} reserved successfully for {guest} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd}. Total price: {totalPrice:C}");
     }
-
-
     public void ActivateTodaysReservations()
     {
       var today = DateTime.Now.Date;
@@ -155,7 +151,6 @@ namespace Hotel.Services
 
       _fileService.SaveReservations(_reservations);
     }
-
     public void PrintBookingReceipt(int roomNumber)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
@@ -225,7 +220,6 @@ namespace Hotel.Services
       foreach (var room in _rooms.Where(r => r.Status == RoomStatus.Unavailable))
         DisplayRoom(room);
     }
-
     public void FilterRooms(RoomType? type = null, RoomStatus? status = null, decimal? minPrice = null, decimal? maxPrice = null, int? minCap = null)
     {
       var filtered = _rooms.AsEnumerable();
@@ -240,8 +234,6 @@ namespace Hotel.Services
       foreach (var room in filtered)
         DisplayRoom(room);
     }
-
-
     public void BookRoom(string guest, int roomNumber, int stayDays = 1)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
@@ -270,8 +262,6 @@ namespace Hotel.Services
       _history.Log($"BOOKED | Room {roomNumber} booked for {guest}, total {totalPrice:C}");
       Console.WriteLine($"Room {roomNumber} booked successfully for {guest}. " + $"Check-out date: {room.CheckOutDate:yyyy-MM-dd}, Total price: {totalPrice:C}");
     }
-
-
     public void CheckoutRoom(int roomNumber)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
@@ -303,7 +293,6 @@ namespace Hotel.Services
 
       _fileService.SaveRooms(_rooms);
     }
-
     public void MakeRoomUnavailable(int roomNumber)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
@@ -312,12 +301,10 @@ namespace Hotel.Services
         Console.WriteLine($"Room {roomNumber} not found!");
         return;
       }
-
       room.MakeUnavailable();
       _history.Log($"SYSTEM | Room {roomNumber} marked as unavailable.");
       Console.WriteLine($"Room {roomNumber} is now unavailable.");
     }
-
     public void AddRoom(int number, RoomType type, int capacity, decimal price, string description, string bedType, int bedCount, List<string>? amenities = null)
     {
       if (_rooms.Any(r => r.Number == number))
@@ -331,7 +318,6 @@ namespace Hotel.Services
       _history.Log($"SYSTEM | Room {number} added.");
       Console.WriteLine($"Room {number} added successfully.");
     }
-
     public void SetCleaningInProgress(int roomNumber)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
@@ -351,7 +337,6 @@ namespace Hotel.Services
 
       _fileService.SaveRooms(_rooms);
     }
-
     public void MakeRoomAsCleaned(int roomNumber)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
@@ -390,7 +375,6 @@ namespace Hotel.Services
       }
       _fileService.SaveRooms(_rooms);
     }
-
     public void MarkRoomUnderMaintenance(int roomNumber, DateTime start, DateTime end, User user)
     {
       if (user.Role != UserRole.Admin)
@@ -489,7 +473,34 @@ namespace Hotel.Services
 
       _fileService.SaveRooms(_rooms);
     }
+    public List<Room> SearchRooms(RoomSearchFilter filter)
+    {
+      var query = _rooms.AsEnumerable();
 
+      if (filter.MinPrice.HasValue)
+        query = query.Where(r => r.PricePerNight >= filter.MinPrice.Value);
+
+      if (filter.MaxPrice.HasValue)
+        query = query.Where(r => r.PricePerNight <= filter.MaxPrice.Value);
+
+      if (filter.Type.HasValue)
+        query = query.Where(r => r.Type == filter.Type.Value);
+
+
+      if (filter.MinCapacity.HasValue)
+        query = query.Where(r => r.Capacity >= filter.MinCapacity.Value);
+
+      if (filter.Status.HasValue)
+        query = query.Where(r => r.Status == filter.Status.Value);
+
+      if (filter.RequiredAmenities != null && filter.RequiredAmenities.Any())
+      {
+        query = query.Where(r =>
+            filter.RequiredAmenities.All(a => r.Amenities.Contains(a, StringComparer.OrdinalIgnoreCase)));
+      }
+
+      return query.ToList();
+    }
     public void RemoveRoom(int number, User user)
     {
       var room = _rooms.FirstOrDefault(r => r.Number == number);
@@ -552,7 +563,6 @@ namespace Hotel.Services
       _history.Log($"SYSTEM | Room {number} updated by {user.Username}");
       Console.WriteLine($"Room {number} updated successfully.");
     }
-
     private void DisplayRoom(Room room)
     {
       Console.WriteLine($"Room {room.Number} | Type: {room.Type} | Status: {room.Status} | Capacity: {room.Capacity} | Price: {room.PricePerNight:C} | Beds: {room.BedCount} {room.BedType}");
