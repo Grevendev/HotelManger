@@ -72,10 +72,11 @@ while (!exitProgram)
     Console.WriteLine("8. Book room in advance");
     Console.WriteLine("9. Cancel future booking");
     Console.WriteLine("10.Confirm future booking");
-    Console.WriteLine("11. Logout");
+    Console.WriteLine("11. Print booking receipt");
+    Console.WriteLine("12. Logout");
 
 
-    int menuIndex = 12;
+    int menuIndex = 13;
 
     if (activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddUser))
       Console.WriteLine($"{menuIndex++}. Add new user");
@@ -166,8 +167,13 @@ while (!exitProgram)
         bookingService.ConfirmFutureBooking(confirmRoom);
         break;
 
-
       case "11":
+        int receiptRoom = InputHelper.GetInt("Room number to print receipt: ", 1);
+        bookingService.PrintBookingReceipt(receiptRoom);
+        break;
+
+
+      case "12":
         historyService.Log($"{activeUser.Username} logged out.", "LOGOUT");
         Console.WriteLine("Logging out...");
         Thread.Sleep(1000);
@@ -178,7 +184,7 @@ while (!exitProgram)
       // EVERYTHING BELOW IS UNCHANGED LOGICALLY
       // Only the case numbers shifted automatically
       // ---------------------------------------------
-      case "12" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddUser):
+      case "13" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddUser):
         string newUser = InputHelper.GetString("New username: ");
         string newPass = InputHelper.GetString("Password: ");
         UserRole role = InputHelper.GetEnum("Role (Admin/Receptionist): ", UserRole.Receptionist);
@@ -187,7 +193,7 @@ while (!exitProgram)
         Console.WriteLine($"User {newUser} added with role {role}.");
         break;
 
-      case "13" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddRoom):
+      case "14" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.AddRoom):
         int newRoomNum = InputHelper.GetInt("Room number to add: ", minValue: 1);
         RoomType type = InputHelper.GetEnum("Room type (SingleBed/DoubleBed/Suite): ", RoomType.SingleBed);
         int capacity = InputHelper.GetInt("Capacity: ", minValue: 1);
@@ -200,27 +206,27 @@ while (!exitProgram)
         bookingService.AddRoom(newRoomNum, type, capacity, price, desc, bedType, bedCount);
         break;
 
-      case "14" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.RemoveRoom):
+      case "15" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.RemoveRoom):
         int removeRoomNum = InputHelper.GetInt("Room number to remove: ", minValue: 1);
         bookingService.RemoveRoom(removeRoomNum, activeUser);
         break;
 
-      case "15" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.UpdateRoomPrice):
+      case "16" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.UpdateRoomPrice):
         int priceRoomNum = InputHelper.GetInt("Enter room number to update price: ", minValue: 1);
         decimal newPrice = InputHelper.GetDecimal("Enter new price: ", minValue: 1);
         bookingService.UpdateRoomPrice(priceRoomNum, newPrice, activeUser);
         break;
 
-      case "16" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.UpdateRoom):
+      case "17" when activeUser.Role == UserRole.Admin || activeUser.HasPermission(Permission.UpdateRoom):
         int updateNum = InputHelper.GetInt("Enter room number to update details: ", minValue: 1);
         bookingService.UpdateRoom(updateNum, activeUser);
         break;
 
-      case "17" when activeUser.HasPermission(Permission.ViewHistory):
+      case "18" when activeUser.HasPermission(Permission.ViewHistory):
         historyService.DisplayHistory();
         break;
 
-      case "18" when activeUser.HasPermission(Permission.FilterHistory):
+      case "19" when activeUser.HasPermission(Permission.FilterHistory):
         string keyword = InputHelper.GetString("Keyword (optional): ", allowEmpty: true);
         DateTime? from = InputHelper.GetOptionalDate("From date (yyyy-MM-dd) or blank: ");
         DateTime? to = InputHelper.GetOptionalDate("To date (yyyy-MM-dd) or blank: ");
@@ -228,11 +234,11 @@ while (!exitProgram)
         historyService.DisplayHistory(filtered);
         break;
 
-      case "19" when activeUser.HasPermission(Permission.ManagePermissions):
+      case "20" when activeUser.HasPermission(Permission.ManagePermissions):
         permService.ManagePermissionsMenu(activeUser);
         break;
 
-      case "20":
+      case "21":
         Console.WriteLine("Exiting program...");
         Thread.Sleep(1000);
         loggedIn = false;

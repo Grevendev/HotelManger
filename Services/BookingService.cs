@@ -139,6 +139,49 @@ namespace Hotel.Services
       _fileService.SaveReservations(_reservations);
     }
 
+    public void PrintBookingReceipt(int roomNumber)
+    {
+      var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
+      if (room == null)
+      {
+        Console.WriteLine($"Room {roomNumber} not found!");
+        return;
+      }
+      if (room.Status != RoomStatus.Occupied && room.Status != RoomStatus.BookedInAdvance)
+      {
+        Console.WriteLine($"Room {roomNumber} is not currently booked.");
+        return;
+      }
+      var checkIn = room.CheckInDate ?? DateTime.Now;
+      var checkOut = room.CheckOutDate ?? checkIn.AddDays(1);
+      var totalDays = (checkOut - checkIn).Days;
+      totalDays = totalDays == 0 ? 1 : totalDays;
+      var totalPrice = totalDays * room.PricePerNight;
+
+      string receipt = $@" 
+      --- Booking Receipt ---
+      Guest: {room.GuestName}
+      Room Number: {room.Number}
+      Room Type: {room.Type}
+      Check-in: {checkIn:yyyy-MM-dd}
+      Check-out: {checkOut:yyyy-MM-dd}
+      Nights: {totalDays}
+      Price per night: {room.PricePerNight:C}
+      Total Price {totalPrice:C}
+      -----------------------
+      ";
+
+      Console.WriteLine(receipt);
+
+      string fileName = $"receipts/Receipt_Room{room.Number}_{DateTime.Now:yyyyMMddHHmmss}.txt";
+      Directory.CreateDirectory("receipts");
+      File.WriteAllText(fileName, receipt);
+
+      _history.Log($"RECEIPT | Printed receipt for Room {room.Number} ({room.GuestName})");
+
+      Console.WriteLine($"Receipt saved to {fileName}");
+    }
+
 
     public void ShowUnavailableRooms()
     {

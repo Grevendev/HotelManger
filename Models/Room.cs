@@ -16,7 +16,8 @@ namespace Hotel.Models
   {
     Available,
     Occupied,
-    Unavailable
+    Unavailable,
+    BookedInAdvance
   }
 
   public class Room
