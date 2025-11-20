@@ -5,14 +5,17 @@ namespace Hotel.Services
 {
   public class BookingService
   {
+    private FileService _fileService;
     private readonly List<Room> _rooms;
     private readonly HistoryService _history;
     private readonly List<Reservation> _reservations = new();
 
-    public BookingService(List<Room> rooms, HistoryService history)
+    public BookingService(List<Room> rooms, HistoryService history, FileService fileService)
     {
       _rooms = rooms;
       _history = history;
+      _fileService = fileService;
+      _reservations = _fileService.LoadReservations();
     }
 
     public void ShowAllRooms()
@@ -84,6 +87,38 @@ namespace Hotel.Services
         _reservations.Remove(res);
       }
     }
+
+    public void CancelFutureBooking(int roomNumber)
+    {
+      var reservation = _reservations
+          .FirstOrDefault(r => r.RoomNumber == roomNumber);
+
+      if (reservation == null)
+      {
+        Console.WriteLine("This room has no future booking to cancel.");
+        return;
+      }
+
+      // Check if the reservation already started
+      if (reservation.CheckInDate.Date <= DateTime.Today)
+      {
+        Console.WriteLine("This reservation has already started and cannot be cancelled.");
+        return;
+      }
+
+      // Remove reservation
+      _reservations.Remove(reservation);
+
+      // Save reservations list
+      _fileService.SaveReservations(_reservations);
+
+      _history.Log(
+          $"CANCEL FUTURE | Future reservation for room {roomNumber} cancelled (Guest: {reservation.Guest})."
+      );
+
+      Console.WriteLine($"Future reservation for room {roomNumber} has been cancelled.");
+    }
+
 
     public void ShowUnavailableRooms()
     {

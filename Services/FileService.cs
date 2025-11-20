@@ -89,5 +89,25 @@ namespace Hotel.Services
         lines.Add($"{user.Username},{user.Password},{user.Role}");
       File.WriteAllLines(usersFile, lines);
     }
+
+    public List<Reservation> LoadReservations()
+    {
+      string path = "data/reservations.json";
+
+      if (!File.Exists(path))
+        return new List<Reservation>();
+
+      string json = File.ReadAllText(path);
+      return JsonSerializer.Deserialize<List<Reservation>>(json) ?? new List<Reservation>();
+    }
+
+    public void SaveReservations(List<Reservation> reservations)
+    {
+      File.WriteAllText("data/reservations.json",
+          JsonSerializer.Serialize(reservations, new JsonSerializerOptions { WriteIndented = true }));
+    }
+
   }
+
+
 }
