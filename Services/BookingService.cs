@@ -282,6 +282,13 @@ namespace Hotel.Services
       Console.WriteLine($"Room {roomNumber} checked out successfully. Total price: {totalPrice:C}");
 
       room.ClearGuest();
+
+      room.Status = RoomStatus.NeedsCleaning;
+
+      _history.Log($"CLEANING_REQUIRED | Room {room.Number} now needs cleaning.");
+      Console.WriteLine($"Room {room.Number} is now marked as NEEDS CLEANING.");
+
+      _fileService.SaveRooms(_rooms);
     }
 
     public void MakeRoomUnavailable(int roomNumber)
@@ -310,6 +317,46 @@ namespace Hotel.Services
       _rooms.Add(room);
       _history.Log($"SYSTEM | Room {number} added.");
       Console.WriteLine($"Room {number} added successfully.");
+    }
+
+    public void SetCleaningInProgress(int roomNumber)
+    {
+      var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
+      if (room == null)
+      {
+        Console.WriteLine("Room not found.");
+        return;
+      }
+      if (room.Status != RoomStatus.NeedsCleaning)
+      {
+        Console.WriteLine("Room does not require cleaning.");
+        return;
+      }
+      room.Status = RoomStatus.CleaningInProgress;
+      _history.Log($"CLEANING_STARTED | Room {room.Number} is being cleaned.");
+      Console.WriteLine($"Room {room.Number} is now markedas Cleaning In Progress.");
+
+      _fileService.SaveRooms(_rooms);
+    }
+
+    public void MakeRoomAsCleaned(int roomNumber)
+    {
+      var room = _rooms.FirstOrDefault(r => r.Number == roomNumber);
+      if (room == null)
+      {
+        Console.WriteLine("Room not found.");
+        return;
+      }
+      if (room.Status != RoomStatus.CleaningInProgress && room.Status != RoomStatus.NeedsCleaning)
+      {
+        Console.WriteLine("Room is not in a cleanable state.");
+        return;
+      }
+      room.Status = RoomStatus.Available;
+      _history.Log($"CLEANED | Room {room.Number} has been cleaned and is available.");
+      Console.WriteLine($"Room {room.Number} is now clean and available.");
+
+      _fileService.SaveRooms(_rooms);
     }
 
     public void RemoveRoom(int number, User user)

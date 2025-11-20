@@ -17,7 +17,9 @@ namespace Hotel.Models
     Available,
     Occupied,
     Unavailable,
-    BookedInAdvance
+    BookedInAdvance,
+    NeedsCleaning,
+    CleaningInProgress
   }
 
   public class Room
@@ -34,6 +36,7 @@ namespace Hotel.Models
     [JsonInclude] public string BedType { get; set; } = "Single";
     [JsonInclude] public int BedCount { get; set; } = 1;
     [JsonInclude] public List<string> Amenities { get; set; } = new();
+    [JsonInclude] public bool RequiresCleaning { get; set; }
 
     public Room() { } // parameterless for serializer
 
