@@ -117,6 +117,9 @@ while (!exitProgram)
       Console.WriteLine($"{menuIndex++}. End maintenance for a room");
       Console.WriteLine($"{menuIndex++}. Extend maintenance period");
     }
+    if (activeUser.Role == UserRole.Admin)
+      Console.WriteLine($"{menuIndex++}. Show occupancy & revenue statistics");
+
 
     Console.WriteLine($"{menuIndex}. Exit program");
 
@@ -303,8 +306,13 @@ while (!exitProgram)
         bookingService.ExtendMaintenance(m3, newEnd, activeUser);
         break;
 
+      case "28" when activeUser.Role == UserRole.Admin:
+        bookingService.ShowAdminStatistics();
+        break;
 
-      case "28":
+
+
+      case "29":
         Console.WriteLine("Exiting program...");
         Thread.Sleep(1000);
         loggedIn = false;

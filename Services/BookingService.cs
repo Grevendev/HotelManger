@@ -10,6 +10,10 @@ namespace Hotel.Services
     private readonly HistoryService _history;
     private readonly List<Reservation> _reservations = new();
     private readonly List<Discount> _discounts = new();
+    private List<BookingHistoryEntry> _bookinghistory = new List<BookingHistoryEntry>();
+
+
+
 
     public BookingService(List<Room> rooms, HistoryService history, FileService fileService)
     {
@@ -49,6 +53,14 @@ namespace Hotel.Services
           return;
         }
       }
+      _bookinghistory.Add(new BookingHistoryEntry
+      {
+        RoomNumber = room.Number,
+        CheckIn = checkIn,
+        Nights = stayDays,
+        PricePerNight = room.PricePerNight
+      });
+
 
       if (checkIn.Date <= DateTime.Now.Date)
       {
@@ -66,6 +78,8 @@ namespace Hotel.Services
         return;
       }
 
+
+
       decimal totalPrice = ApplyDiscounts(room, stayDays) * stayDays;
 
 
@@ -75,6 +89,7 @@ namespace Hotel.Services
 
       Console.WriteLine($"Room {roomNumber} reserved successfully for {guest} from {checkIn:yyyy-MM-dd} to {checkOut:yyyy-MM-dd}. Total price: {totalPrice:C}");
     }
+
     public void ActivateTodaysReservations()
     {
       var today = DateTime.Now.Date;
@@ -253,6 +268,16 @@ namespace Hotel.Services
         Console.WriteLine($"Room {roomNumber} is not available.");
         return;
       }
+      _bookinghistory.Add(new BookingHistoryEntry
+      {
+        RoomNumber = room.Number,
+        CheckIn = room.CheckInDate ?? DateTime.Now,
+        Nights = stayDays,
+        PricePerNight = room.PricePerNight
+      });
+
+
+
 
       room.Status = RoomStatus.Occupied;
       room.GuestName = guest;
@@ -582,5 +607,138 @@ namespace Hotel.Services
         }
       }
     }
+    // =========================
+    //   ADMIN STATISTICS
+    // =========================
+
+    public int GetCurrentlyOccupiedRooms()
+    {
+      return _rooms.Count(r => r.Status == RoomStatus.Occupied);
+    }
+
+    public decimal GetOccupancyRate()
+    {
+      if (_rooms.Count == 0) return 0;
+      return (decimal)GetCurrentlyOccupiedRooms() / _rooms.Count * 100;
+    }
+
+    public decimal GetDailyRevenue()
+    {
+      return _rooms
+          .Where(r => r.Status == RoomStatus.Occupied)
+          .Sum(r => r.PricePerNight);
+    }
+
+    public decimal GetWeeklyRevenue()
+    {
+      return _rooms
+          .Where(r => r.Status == RoomStatus.Occupied)
+          .Sum(r => r.PricePerNight * 7);
+    }
+
+    public decimal GetMonthlyRevenue()
+    {
+      return _rooms
+          .Where(r => r.Status == RoomStatus.Occupied)
+          .Sum(r => r.PricePerNight * 30);
+    }
+
+
+    // =========================
+    //  Revenue last 7 days (history-based)
+    // =========================
+
+    public decimal GetRevenueLast7Days()
+    {
+      DateTime cutoff = DateTime.Now.AddDays(-7);
+
+      return _bookinghistory
+          .Where(h => h.CheckIn >= cutoff)
+          .Sum(h => h.PricePerNight * h.Nights);
+    }
+
+
+    // =========================
+    //  Most popular room type
+    // =========================
+
+    public RoomType? GetMostPopularRoomType()
+    {
+      if (_bookinghistory.Count == 0) return null;
+
+      return _bookinghistory
+          .GroupBy(h =>
+          {
+            var room = _rooms.FirstOrDefault(r => r.Number == h.RoomNumber);
+            return room?.Type;
+          })
+          .Where(g => g.Key != null)
+          .OrderByDescending(g => g.Count())
+          .First()
+          .Key;
+    }
+
+
+    // =========================
+    //   Occupancy Over Time (30 days)
+    // =========================
+
+    public Dictionary<DateTime, int> GetOccupancyOverTime()
+    {
+      Dictionary<DateTime, int> result = new();
+
+      for (int i = 0; i < 30; i++)
+      {
+        DateTime date = DateTime.Now.Date.AddDays(-i);
+
+        int occupied = _bookinghistory
+            .Where(h =>
+                date >= h.CheckIn &&
+                date < h.CheckIn.AddDays(h.Nights))
+            .Count();
+
+        result[date] = occupied;
+      }
+
+      return result;
+    }
+
+
+    // =========================
+    //   Display All Statistics
+    // =========================
+
+    public void ShowAdminStatistics()
+    {
+      Console.WriteLine("=== ADMIN HOTEL STATISTICS ===\n");
+
+      Console.WriteLine($"Occupied rooms: {GetCurrentlyOccupiedRooms()}");
+      Console.WriteLine($"Occupancy rate: {GetOccupancyRate():F2}%");
+      Console.WriteLine($"Revenue today: {GetDailyRevenue():C}");
+      Console.WriteLine($"Revenue this week: {GetWeeklyRevenue():C}");
+      Console.WriteLine($"Revenue this month: {GetMonthlyRevenue():C}");
+      Console.WriteLine($"Revenue last 7 days: {GetRevenueLast7Days():C}");
+
+      var pop = GetMostPopularRoomType();
+      Console.WriteLine($"Most popular room type: {pop?.ToString() ?? "N/A"}");
+
+      Console.WriteLine("\n--- Occupancy last 30 days ---");
+      foreach (var day in GetOccupancyOverTime().OrderBy(x => x.Key))
+      {
+        Console.WriteLine($"{day.Key:yyyy-MM-dd}: {day.Value} rooms occupied");
+      }
+
+      Console.WriteLine("\nPress any key to continue...");
+      Console.ReadKey();
+    }
+
   }
+  public class BookingHistoryEntry
+  {
+    public int RoomNumber { get; set; }
+    public DateTime CheckIn { get; set; }
+    public int Nights { get; set; }
+    public decimal PricePerNight { get; set; }
+  }
+
 }
